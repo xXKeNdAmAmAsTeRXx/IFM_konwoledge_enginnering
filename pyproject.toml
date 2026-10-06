@@ -7,7 +7,9 @@ authors = [
     { email = "frkubala@student.agh.edu.pl" }
 ]
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "unified-planning[fast-downward,pyperplan]>=1.3.0",
+]
 
 [project.scripts]
 ifm-konwoledge-enginnering = "ifm_konwoledge_enginnering:main"
