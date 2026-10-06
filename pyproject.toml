@@ -1,0 +1,17 @@
+[project]
+name = "ifm-konwoledge-enginnering"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { email = "frkubala@student.agh.edu.pl" }
+]
+requires-python = ">=3.13"
+dependencies = []
+
+[project.scripts]
+ifm-konwoledge-enginnering = "ifm_konwoledge_enginnering:main"
+
+[build-system]
+requires = ["uv_build>=0.12.17,<0.13.0"]
+build-backend = "uv_build"
