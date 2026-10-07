@@ -15,5 +15,5 @@ class BlockVIbe:
 
         pass
 
-    def __init__(self, state: np.ndarray[np.uint32])
+    def __init__(self, state: np.ndarray[np.uint32]):
         pass
