@@ -23,11 +23,15 @@ name = "ifm-konwoledge-enginnering"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "numpy" },
     { name = "unified-planning", extra = ["fast-downward", "pyperplan"] },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "unified-planning", extras = ["fast-downward", "pyperplan"], specifier = ">=1.3.0" }]
+requires-dist = [
+    { name = "numpy", specifier = ">=2.5.3" },
+    { name = "unified-planning", extras = ["fast-downward", "pyperplan"], specifier = ">=1.3.0" },
+]
 
 [[package]]
 name = "more-itertools"
