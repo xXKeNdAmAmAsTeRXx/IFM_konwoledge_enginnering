@@ -12,7 +12,7 @@ BlockState(start, goal). Błędy formatu pliku są zgłaszane jako ValueError.
 """
 import pytest
 
-from src.ifm_konwoledge_enginnering.Block_World.Project.src.BlockState import BlockState
+from src.ifm_konwoledge_enginnering.Block_World.Project.src.StartAndGoal import StartAndGoal
 
 
 def start_layout(state):
@@ -47,9 +47,9 @@ def test_loads_example_from_assignment(tmp_path):
         "2 3 4 5 0\n",
     )
 
-    state = BlockState.load_from_txt(path)
+    state = StartAndGoal.load_from_txt(path)
 
-    assert isinstance(state, BlockState)
+    assert isinstance(state, StartAndGoal)
     assert start_layout(state) == [0, 1, 0, 2, 3]
     assert goal_layout(state) == [2, 3, 4, 5, 0]
 
@@ -70,7 +70,7 @@ def test_loads_example_from_assignment(tmp_path):
 def test_skips_comments_blanks_and_tolerates_whitespace(tmp_path, text):
     path = write_input(tmp_path, text)
 
-    state = BlockState.load_from_txt(path)
+    state = StartAndGoal.load_from_txt(path)
 
     assert start_layout(state) == [0, 1, 0]
     assert goal_layout(state) == [0, 0, 0]
@@ -80,7 +80,7 @@ def test_file_with_bom_is_read(tmp_path):
     path = tmp_path / "bom.txt"
     path.write_bytes(b"\xef\xbb\xbf0 1 0\n0 0 0\n")
 
-    state = BlockState.load_from_txt(str(path))
+    state = StartAndGoal.load_from_txt(str(path))
 
     assert start_layout(state) == [0, 1, 0]
     assert goal_layout(state) == [0, 0, 0]
@@ -89,7 +89,7 @@ def test_file_with_bom_is_read(tmp_path):
 def test_first_line_is_start_and_second_is_goal(tmp_path):
     path = write_input(tmp_path, "0 0 0\n0 1 2\n")
 
-    state = BlockState.load_from_txt(path)
+    state = StartAndGoal.load_from_txt(path)
 
     assert start_layout(state) == [0, 0, 0]
     assert goal_layout(state) == [0, 1, 2]
@@ -98,7 +98,7 @@ def test_first_line_is_start_and_second_is_goal(tmp_path):
 def test_single_block(tmp_path):
     path = write_input(tmp_path, "0\n0\n")
 
-    state = BlockState.load_from_txt(path)
+    state = StartAndGoal.load_from_txt(path)
 
     assert start_layout(state) == [0]
     assert goal_layout(state) == [0]
@@ -109,7 +109,7 @@ def test_accepts_path_with_directories_and_unicode_comments(tmp_path):
     sub.mkdir()
     path = write_input(sub, "# układ początkowy: wieża\n0 1 2\n# cel: wszystko na stole\n0 0 0\n")
 
-    state = BlockState.load_from_txt(path)
+    state = StartAndGoal.load_from_txt(path)
 
     assert start_layout(state) == [0, 1, 2]
     assert goal_layout(state) == [0, 0, 0]
@@ -132,7 +132,7 @@ def test_non_integer_tokens_are_rejected(tmp_path, text):
     path = write_input(tmp_path, text)
 
     with pytest.raises(ValueError) as exc_info:
-        BlockState.load_from_txt(path)
+        StartAndGoal.load_from_txt(path)
 
     assert str(exc_info.value).strip(), "komunikat błędu nie może być pusty"
 
@@ -150,11 +150,11 @@ def test_wrong_number_of_layout_lines_is_rejected(tmp_path, text):
     path = write_input(tmp_path, text)
 
     with pytest.raises(ValueError) as exc_info:
-        BlockState.load_from_txt(path)
+        StartAndGoal.load_from_txt(path)
 
     assert str(exc_info.value).strip(), "komunikat błędu nie może być pusty"
 
 
 def test_missing_file_raises_file_not_found(tmp_path):
     with pytest.raises(FileNotFoundError):
-        BlockState.load_from_txt(str(tmp_path / "does_not_exist.txt"))
+        StartAndGoal.load_from_txt(str(tmp_path / "does_not_exist.txt"))

@@ -4,7 +4,7 @@ import numpy as np
 
 
 
-class BlockState:
+class StartAndGoal:
     """
     state: is a array defining a blocks array
 
@@ -65,7 +65,7 @@ class BlockState:
 
         start, goal = np.array(parsed)
         print(start)
-        state = BlockState(start, goal)
+        state = StartAndGoal(start, goal)
 
         return state
 
