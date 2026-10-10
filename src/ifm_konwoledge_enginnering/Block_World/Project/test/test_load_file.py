@@ -1,49 +1,41 @@
-"""Tests for BlockState.load_from_txt (Projekt 1 - swiat klockow).
+"""Testy dla BlockState.load_from_txt (Projekt 1 – świat klocków).
 
-Scope: reading and parsing the input FILE only.
-  * two meaningful lines: start layout, then goal layout
-  * blank lines and lines starting with '#' are skipped
-  * each layout is N integers separated by whitespace
-Validation of the layouts themselves (self-loops, cycles, two blocks on one
-block, ...) is covered by other tests.
+Zakres: wyłącznie odczyt i parsowanie PLIKU wejściowego.
+  * dwie istotne linie: układ początkowy, a potem układ docelowy
+  * linie puste i zaczynające się od '#' są pomijane
+  * każdy układ to N liczb całkowitych oddzielonych białymi znakami
+Walidacja samych układów (klocek na samym sobie, cykle, dwa klocki na jednym
+klocku itd.) jest pokryta innymi testami.
 
-load_from_txt returns ONE BlockState object built as BlockState(start, goal).
-
-ASSUMPTIONS - adjust the things marked "ADJUST" to match your code:
-  1. module / class name           -> import below
-  2. how to read start and goal    -> `start_layout()` / `goal_layout()` below
-  3. file-format errors are raised as ValueError
+load_from_txt zwraca JEDEN obiekt BlockState zbudowany jako
+BlockState(start, goal). Błędy formatu pliku są zgłaszane jako ValueError.
 """
 import pytest
 
-from src.ifm_konwoledge_enginnering.Block_World.Project.src.BlockState import BlockState  # ADJUST: module name
+from src.ifm_konwoledge_enginnering.Block_World.Project.src.BlockState import BlockState
 
 
 def start_layout(state):
-    """Return the start layout as the list from the file format:
-    item i-1 = block that block i lies on (0 = table).
-
-    ADJUST: change `state.start` to whatever your class exposes.
+    """Zwraca układ początkowy jako listę w formacie pliku:
+    element i-1 = numer klocka, na którym leży klocek i (0 = stół).
     """
     return list(state.start)
 
 
 def goal_layout(state):
-    """Same as start_layout, but for the goal layout.
-
-    ADJUST: change `state.goal` to whatever your class exposes.
-    """
+    """To samo co start_layout, ale dla układu docelowego."""
     return list(state.goal)
 
 
 def write_input(tmp_path, text, name="input.txt"):
+    """Zapisuje tekst do pliku tymczasowego i zwraca jego ścieżkę."""
     path = tmp_path / name
     path.write_text(text, encoding="utf-8")
     return str(path)
 
 
 # --------------------------------------------------------------------------
-# Happy path
+# Poprawne pliki
 # --------------------------------------------------------------------------
 
 def test_loads_example_from_assignment(tmp_path):
@@ -124,7 +116,7 @@ def test_accepts_path_with_directories_and_unicode_comments(tmp_path):
 
 
 # --------------------------------------------------------------------------
-# Malformed files
+# Niepoprawne pliki
 # --------------------------------------------------------------------------
 
 @pytest.mark.parametrize(
@@ -142,7 +134,7 @@ def test_non_integer_tokens_are_rejected(tmp_path, text):
     with pytest.raises(ValueError) as exc_info:
         BlockState.load_from_txt(path)
 
-    assert str(exc_info.value).strip(), "error message must not be empty"
+    assert str(exc_info.value).strip(), "komunikat błędu nie może być pusty"
 
 
 @pytest.mark.parametrize(
@@ -160,7 +152,7 @@ def test_wrong_number_of_layout_lines_is_rejected(tmp_path, text):
     with pytest.raises(ValueError) as exc_info:
         BlockState.load_from_txt(path)
 
-    assert str(exc_info.value).strip()
+    assert str(exc_info.value).strip(), "komunikat błędu nie może być pusty"
 
 
 def test_missing_file_raises_file_not_found(tmp_path):
