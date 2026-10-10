@@ -3,6 +3,7 @@ from typing import Self
 import numpy as np
 
 
+
 class BlockState:
     """
     state: is a array defining a blocks array
@@ -40,7 +41,7 @@ class BlockState:
         return True
 
     @staticmethod
-    def load_from_txt(path:str) -> Self:
+    def load_from_txt(path:str):
 
         # utf-8-sig also copes with a BOM added by some Windows editors
         with open(path, "r", encoding="utf-8-sig") as f:
