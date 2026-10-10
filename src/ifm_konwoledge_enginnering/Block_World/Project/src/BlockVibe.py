@@ -36,7 +36,8 @@ class BlockVibe:
     @staticmethod
     def load_from_txt(path:str):
         with open(path, "r") as f:
-            pass
+            lines = f.readlines()
+
 
 
 
@@ -45,6 +46,8 @@ class BlockVibe:
 
 
     def __init__(self,start:np.ndarray[np.int32], goal:np.ndarray[np.int32]):
+        assert len(start)==len(goal)
+
         # Check is states are legal
         print("Checking initial State:")
         self._check_if_state_is_legal(start)
