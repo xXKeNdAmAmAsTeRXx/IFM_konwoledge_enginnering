@@ -1,12 +1,12 @@
 import numpy as np
 import pytest
-from src.ifm_konwoledge_enginnering.Block_World.Project.src.StartAndGoal import StartAndGoal
+from src.ifm_konwoledge_enginnering.Block_World.Project.src.BlockState import BlockState
 
 def test_valid_state():
     """Poprawny układ powinien zostać zaakceptowany."""
     state = np.array([0, 1, 0, 2, 3], dtype=np.int32)
 
-    assert StartAndGoal._check_if_state_is_legal(state) is True
+    assert BlockState._check_if_state_is_legal(state) is True
 
 
 def test_block_cannot_rest_on_itself():
@@ -14,7 +14,7 @@ def test_block_cannot_rest_on_itself():
     state = np.array([1, 0], dtype=np.int32)
 
     with pytest.raises(ValueError):
-        StartAndGoal._check_if_state_is_legal(state)
+        BlockState._check_if_state_is_legal(state)
 
 
 def test_block_cannot_rest_on_nonexistent_block():
@@ -23,21 +23,21 @@ def test_block_cannot_rest_on_nonexistent_block():
     state_2 = np.array([-1, 0], dtype=np.int32)
 
     with pytest.raises(ValueError):
-        StartAndGoal._check_if_state_is_legal(state_1)
+        BlockState._check_if_state_is_legal(state_1)
 
     with pytest.raises(ValueError):
-        StartAndGoal._check_if_state_is_legal(state_2)
+        BlockState._check_if_state_is_legal(state_2)
 
 def test_only_one_block_can_rest_on_another():
     """Na jednym klocku nie mogą leżeć dwa inne klocki."""
     state = np.array([0, 1, 1], dtype=np.int32)
 
     with pytest.raises(ValueError):
-        StartAndGoal._check_if_state_is_legal(state)
+        BlockState._check_if_state_is_legal(state)
 
 def test_state_cannot_contain_cycle():
     """Układ nie może zawierać cyklu."""
     state = np.array([0,3,2], dtype=np.int32)
 
     with pytest.raises(ValueError):
-        StartAndGoal._check_if_state_is_legal(state)
+        BlockState._check_if_state_is_legal(state)

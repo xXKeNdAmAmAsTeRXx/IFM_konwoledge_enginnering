@@ -4,7 +4,7 @@ import numpy as np
 
 
 
-class StartAndGoal:
+class BlockState:
     """
     state: is a array defining a blocks array
 
@@ -65,21 +65,21 @@ class StartAndGoal:
 
         start, goal = np.array(parsed)
         print(start)
-        state = StartAndGoal(start, goal)
+        state = BlockState(start, goal)
 
         return state
 
 
-    def __init__(self,start:np.ndarray[np.int32], goal:np.ndarray[np.int32]):
-        assert len(start)==len(goal)
+    def __init__(self, current:np.ndarray[np.int32], goal:np.ndarray[np.int32]):
+        assert len(current) == len(goal)
 
         # Check is states are legal
         print("Checking initial State:")
-        self._check_if_state_is_legal(start)
+        self._check_if_state_is_legal(current)
 
         print("Checking goal State:")
         self._check_if_state_is_legal(goal)
 
         #create class members
-        self.start=start
+        self.current=current
         self.goal=goal
