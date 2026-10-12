@@ -75,17 +75,19 @@ class BlockState:
         assert len(current) == len(goal)
 
         # Check is states are legal
-        print("Checking initial State:")
+        print("Checking initial State...")
         self._check_if_state_is_legal(current)
+        print("OK\n")
 
-        print("Checking goal State:")
+        print("Checking goal State...")
         self._check_if_state_is_legal(goal)
+        print("OK\n")
 
         #create class members
         self.current=current
         self.goal=goal
 
-    def all_possible_movments(self) -> list[Any]:
+    def all_possible_movements(self) -> list[Any]:
         movements = []
 
 
@@ -105,6 +107,9 @@ class BlockState:
                 for d_idx, d_on in enumerate(self.goal):
                     d_block_id = d_idx + 1
                     d_clear = not (d_block_id in self.current)
+
+                    if d_idx == idx:
+                        continue
 
                     if d_clear:
                         possible_move = self.current.copy()
