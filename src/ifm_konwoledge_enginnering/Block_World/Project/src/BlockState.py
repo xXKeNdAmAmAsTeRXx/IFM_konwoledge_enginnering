@@ -1,4 +1,5 @@
-from typing import Self
+from ipaddress import ip_network
+from typing import Self, Any
 
 import numpy as np
 
@@ -83,3 +84,31 @@ class BlockState:
         #create class members
         self.current=current
         self.goal=goal
+
+    def all_possible_movments(self) -> list[Any]:
+        movements = []
+
+
+        for idx, on in enumerate(self.current):
+            block_id = idx + 1
+            on_table = (self.current[idx] == 0)
+            clear = not (block_id in self.current)
+
+            # 1. Kolcek na stół
+            if clear and not on_table:
+                possible_move = self.current.copy()
+                possible_move[idx] = 0
+                movements.append(possible_move)
+
+            # 2. Klocek na inne klocki
+            if on_table and clear:
+                for d_idx, d_on in enumerate(self.goal):
+                    d_block_id = d_idx + 1
+                    d_clear = not (d_block_id in self.current)
+
+                    if d_clear:
+                        possible_move = self.current.copy()
+                        possible_move[idx] = d_block_id
+                        movements.append(possible_move)
+
+        return movements
