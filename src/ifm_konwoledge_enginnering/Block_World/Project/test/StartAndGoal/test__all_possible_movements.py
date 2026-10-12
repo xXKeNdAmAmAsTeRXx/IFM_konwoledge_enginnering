@@ -1,5 +1,4 @@
 import numpy as np
-import pytest
 from src.ifm_konwoledge_enginnering.Block_World.Project.src.BlockState import BlockState
 
 def test_all_possible_movements_returns_numpy_arrays():
