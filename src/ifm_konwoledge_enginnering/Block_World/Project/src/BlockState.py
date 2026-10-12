@@ -117,3 +117,8 @@ class BlockState:
                         movements.append(possible_move)
 
         return movements
+
+    def update_move(self, move:np.ndarray[np.int32]):
+        self._check_if_state_is_legal(move)
+
+        self.current = move
