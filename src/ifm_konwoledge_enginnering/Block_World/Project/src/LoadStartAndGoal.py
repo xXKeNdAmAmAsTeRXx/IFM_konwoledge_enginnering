@@ -109,13 +109,3 @@ class LoadStartAndGoal:
         self.goal=goal
         self.goal_states = goal_states
 
-    def all_possible_movements(self) -> list[Any]:
-        #TODO: all possible movments based on current BlockStates
-
-        pass
-
-
-
-    def update_move(self, move:np.ndarray[np.int32]):
-        #TODO: Update Block Move
-        pass
