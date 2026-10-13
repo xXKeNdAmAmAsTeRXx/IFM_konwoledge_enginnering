@@ -1,11 +1,7 @@
 import numpy as np
 
-from .LoadStartAndGoal import BlockState
+from .World import World
 
 
-def dfs(state:BlockState, max_visited_notes = 1000):
-
-    if np.array_equal(state.current, state.goal):
-        return [state.current]
-
+def dfs(start: World, goal: World, max_visited_notes = 1000):
     pass
