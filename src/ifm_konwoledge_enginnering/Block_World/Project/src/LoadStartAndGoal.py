@@ -54,6 +54,6 @@ class LoadStartAndGoal:
     def __init__(self, start:np.ndarray[np.int32] | World, goal:np.ndarray[np.int32] | World):
         """Create start and goal worlds from their placement arrays."""
         assert len(start) == len(goal)
-        self.start = World(start) if start is np.ndarray else start
-        self.goal = World(goal) if goal is np.ndarray else goal
+        self.start = start if isinstance(start, World) else World(start)
+        self.goal = goal if isinstance(goal, World) else World(goal)
 
