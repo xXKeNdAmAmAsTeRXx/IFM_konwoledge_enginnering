@@ -1,6 +1,6 @@
 import numpy as np
 
-from .BlockState import BlockState
+from .LoadStartAndGoal import BlockState
 
 
 def dfs(state:BlockState, max_visited_notes = 1000):

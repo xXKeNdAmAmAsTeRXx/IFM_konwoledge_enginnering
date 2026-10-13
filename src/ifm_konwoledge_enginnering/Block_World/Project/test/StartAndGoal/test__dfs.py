@@ -27,7 +27,7 @@ def assert_valid_path(path, start, goal):
     np.testing.assert_array_equal(path[-1], goal)
 
     for state in path:
-        assert BlockState._check_if_state_is_legal(state)
+        assert BlockState._check_if_placement_is_legal(state)
 
 
 # --------------------------------------------------
@@ -44,7 +44,7 @@ def test_dfs_when_start_equals_goal():
 
     assert path is not None
     assert len(path) == 1
-    np.testing.assert_array_equal(path[0], state.current)
+    np.testing.assert_array_equal(path[0], state.start)
 
 
 # --------------------------------------------------
@@ -59,7 +59,7 @@ def test_dfs_finds_solution():
 
     path = dfs(state)
 
-    assert_valid_path(path, state.current, state.goal)
+    assert_valid_path(path, state.start, state.goal)
 
 
 # --------------------------------------------------
@@ -74,7 +74,7 @@ def test_dfs_returns_path_with_legal_transitions():
 
     path = dfs(state)
 
-    assert_valid_path(path, state.current, state.goal)
+    assert_valid_path(path, state.start, state.goal)
 
     for current_state, next_state in zip(path, path[1:]):
         possible_movements = BlockState(
@@ -120,12 +120,12 @@ def test_dfs_does_not_modify_input_state():
         goal=[0, 1, 2],
     )
 
-    original_current = state.current.copy()
+    original_current = state.start.copy()
     original_goal = state.goal.copy()
 
     dfs(state)
 
-    np.testing.assert_array_equal(state.current, original_current)
+    np.testing.assert_array_equal(state.start, original_current)
     np.testing.assert_array_equal(state.goal, original_goal)
 
 
@@ -160,7 +160,7 @@ def test_dfs_path_includes_start_and_goal():
     path = dfs(state)
 
     assert path is not None
-    np.testing.assert_array_equal(path[0], state.current)
+    np.testing.assert_array_equal(path[0], state.start)
     np.testing.assert_array_equal(path[-1], state.goal)
 
 
@@ -171,7 +171,7 @@ def test_dfs_path_includes_start_and_goal():
 def test_dfs_rejects_illegal_initial_state():
     # Pierwszy klocek leży na samym sobie.
     state = BlockState.__new__(BlockState)
-    state.current = np.array([1, 0], dtype=np.int32)
+    state.start = np.array([1, 0], dtype=np.int32)
     state.goal = np.array([0, 1], dtype=np.int32)
 
     with pytest.raises(ValueError):
@@ -181,7 +181,7 @@ def test_dfs_rejects_illegal_initial_state():
 def test_dfs_rejects_illegal_goal_state():
     # Stan docelowy zawiera samopodparcie.
     state = BlockState.__new__(BlockState)
-    state.current = np.array([0, 1], dtype=np.int32)
+    state.start = np.array([0, 1], dtype=np.int32)
     state.goal = np.array([1, 0], dtype=np.int32)
 
     with pytest.raises(ValueError):
@@ -194,7 +194,7 @@ def test_dfs_rejects_illegal_goal_state():
 
 def test_dfs_rejects_different_state_sizes():
     state = BlockState.__new__(BlockState)
-    state.current = np.array([0, 0], dtype=np.int32)
+    state.start = np.array([0, 0], dtype=np.int32)
     state.goal = np.array([0, 1, 2], dtype=np.int32)
 
     with pytest.raises(ValueError):

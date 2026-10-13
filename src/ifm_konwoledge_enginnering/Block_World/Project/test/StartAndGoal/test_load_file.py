@@ -19,7 +19,7 @@ def start_layout(state):
     """Zwraca układ początkowy jako listę w formacie pliku:
     element i-1 = numer klocka, na którym leży klocek i (0 = stół).
     """
-    return list(state.current)
+    return list(state.start)
 
 
 def goal_layout(state):
