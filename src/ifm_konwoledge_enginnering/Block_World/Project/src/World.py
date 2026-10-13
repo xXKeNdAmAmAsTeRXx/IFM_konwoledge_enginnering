@@ -9,6 +9,7 @@ class World:
     The World class represents current placement and states of each block
     """
 
+    @staticmethod
     def _check_if_placement_is_legal(placement:np.ndarray[np.int32]) -> bool:
 
         n = len(placement)
@@ -48,6 +49,19 @@ class World:
             state.clear = False if np.isin(on, state.id) else True
 
         return state
+
+    def update(self, move: Move) -> None:
+
+        # Update Placement
+        new_placement = self.placement.copy()
+        new_placement[move.moving - 1] = move.destination
+        assert self._check_if_placement_is_legal(new_placement), "This Move is not legal"
+
+        self.placement= new_placement
+
+        # Update states
+        self.states[Move.moving - 1].update(move)
+        self.states[Move.destination - 1].update(move)
 
     def __init__(self, placement:np.ndarray[np.int32]):
         assert self._check_if_placement_is_legal(placement), "This block placement cannot exist"

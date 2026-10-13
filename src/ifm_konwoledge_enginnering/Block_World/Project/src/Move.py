@@ -1,6 +1,8 @@
 import numpy as np
+from dataclasses import dataclass
 
+@dataclass
 class Move:
-    def __init__(self, moving:int, destination:int):
-        self.moving = moving
-        self.destination = destination
+    moving: int
+    destination: int
+
