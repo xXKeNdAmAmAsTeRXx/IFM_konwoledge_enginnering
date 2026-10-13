@@ -2,8 +2,7 @@ from typing import List
 
 import numpy as np
 from .BlockState import BlockState
-from .Move import Move
-
+from .Move import Move, calculate_all_possible_moves
 
 
 class World:
@@ -61,26 +60,7 @@ class World:
 
 
     def legal_moves(self) -> List[Move]:
-        """Return legal moves without changing this world."""
-        moves = []
-        clear_blocks = [state.id for state in self.states if state.clear]
-
-        for moving in clear_blocks:
-            current_destination = int(self.placement[moving - 1])
-            for destination in [0, *clear_blocks]:
-                if destination == moving or destination == current_destination:
-                    continue
-
-                candidate = self.placement.copy()
-                candidate[moving - 1] = destination
-                try:
-                    self._check_if_placement_is_legal(candidate)
-                except ValueError:
-                    continue
-
-                moves.append(Move(moving=moving, destination=destination))
-
-        return moves
+        return calculate_all_possible_moves(self.states)
 
     def update(self, move: Move) -> None:
         """Apply a move and refresh the affected block states."""
