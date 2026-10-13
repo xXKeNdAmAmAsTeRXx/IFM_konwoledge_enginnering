@@ -8,11 +8,21 @@ from .World import World
 
 class LoadStartAndGoal:
     """
-    state: is a array defining a blocks array
+    Load the initial and target block arrangements.
+
+    Attributes:
+        start: World representing the initial arrangement.
+        goal: World representing the target arrangement.
     """
 
     @staticmethod
     def load_from_txt(path:str):
+        """Load start and goal layouts from a two-line text file.
+
+        Blank lines and comment lines beginning with ``#`` are ignored.
+
+        Returns the parsed layouts as start and goal World objects.
+        """
 
         # utf-8-sig also copes with a BOM added by some Windows editors
         with open(path, "r", encoding="utf-8-sig") as f:
@@ -42,8 +52,7 @@ class LoadStartAndGoal:
 
 
     def __init__(self, start:np.ndarray[np.int32], goal:np.ndarray[np.int32]):
+        """Create start and goal worlds from their placement arrays."""
         assert len(start) == len(goal)
         self.start = World(start)
         self.goal = World(goal)
-
-

@@ -6,11 +6,19 @@ from .Move import Move
 
 class World:
     """
-    The World class represents current placement and states of each block
+    Store the placement and state of every block in a world.
+
+    Attributes:
+        placement: Support-block ID for each block; 0 represents the table.
+        states: BlockState objects corresponding to the blocks in placement.
     """
 
     @staticmethod
     def _check_if_placement_is_legal(placement:np.ndarray[np.int32]) -> bool:
+        """Return True if placement describes a legal block arrangement.
+
+        Raises ValueError for invalid block IDs, shared supports, or cycles.
+        """
 
         n = len(placement)
         if np.array([(block == idx + 1) for idx, block in enumerate(placement)]).any():
@@ -40,17 +48,21 @@ class World:
         return True
 
     @staticmethod
-    def _set_BlockState(placement: np.ndarray[np.int32]) -> BlockState:
-        state = BlockState()
-        for idx, on in enumerate(placement):
-            state.id = idx + 1
-            state.on = on
-            state.on_table = True if on == 0 else False
-            state.clear = False if np.isin(on, state.id) else True
-
-        return state
+    def _set_BlockState(placement, block_id):
+        on = int(placement[block_id - 1])
+        return BlockState(
+            id=block_id,
+            on=on,
+            on_table=(on == 0),
+            clear=(block_id not in placement),
+        )
 
     def update(self, move: Move) -> None:
+        """Apply a move and refresh the affected block states."""
+
+        #Check if move is leagl
+        assert self.states[move.moving - 1].clear, "Block cannot be moved"
+        assert self.states[move.destination - 1].clear, "Destination block is not cleared"
 
         # Update Placement
         new_placement = self.placement.copy()
@@ -60,15 +72,16 @@ class World:
         self.placement= new_placement
 
         # Update states
-        self.states[Move.moving - 1].update(move)
-        self.states[Move.destination - 1].update(move)
+        self.states = [
+            self._set_BlockState(self.placement, block_id)
+            for block_id in range(1, len(self.placement) + 1)
+        ]
 
-    def __init__(self, placement:np.ndarray[np.int32]):
-        assert self._check_if_placement_is_legal(placement), "This block placement cannot exist"
-
-        states = np.ndarray(shape=(len(placement),), dtype=BlockState)
-        for block in placement:
-            states[block] = self._set_BlockState(block)
-
-        self.states = states
-        self.placement = placement
+    def __init__(self, placement):
+        placement = np.asarray(placement, dtype=np.int32)
+        self._check_if_placement_is_legal(placement)
+        self.placement = placement.copy()
+        self.states = [
+            self._set_BlockState(self.placement, block_id)
+            for block_id in range(1, len(placement) + 1)
+        ]
