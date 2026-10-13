@@ -88,7 +88,7 @@ class World:
         #Check if move is leagl
         #TODO Check if asserst are correct and enough
         assert self.states[move.moving - 1].clear, "Block cannot be moved"
-        assert move.destination == 0 or self.states[move.destination - 1].clear, "Destination block is not cleared"
+        assert move.destination == 0 or self.states[move.destination - 1].clear, "Destination block is not clear"
         assert move.destination != move.moving, "Block cannot be moved onto itself"
 
 
