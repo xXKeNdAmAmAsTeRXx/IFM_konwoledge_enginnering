@@ -1,7 +1,8 @@
 import numpy as np
 
-from .LoadStartAndGoal import BlockState
-
+from .BlockState import BlockState
+from .LoadStartAndGoal import LoadStartAndGoal
+from .Move import Move
 
 
 def state_generator(n_blocks:int, seed:int = 42) -> BlockState:
@@ -9,15 +10,6 @@ def state_generator(n_blocks:int, seed:int = 42) -> BlockState:
 
     path = []
 
-    # Suggest Random Array till it match start conditions
-    while True:
-        start_prop = np.random.randint(0, n_blocks, size=n_blocks, dtype=np.int32)
-
-        if BlockState._check_if_state_is_legal(start_prop):
-            break
-
-    start = start_prop
-    
 
     # Random
 
