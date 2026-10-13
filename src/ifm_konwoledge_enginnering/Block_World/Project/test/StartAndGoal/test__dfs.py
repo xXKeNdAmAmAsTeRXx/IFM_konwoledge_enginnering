@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from src.ifm_konwoledge_enginnering.Block_World.Project.src.BlockState import BlockState
-from src.ifm_konwoledge_enginnering.Block_World.Project.src.dfs import dfs
+from ifm_konwoledge_enginnering.Block_World.Project.src.BlockState import BlockState
+from ifm_konwoledge_enginnering.Block_World.Project.src.dfs import dfs
 
 
 def make_state(current, goal):

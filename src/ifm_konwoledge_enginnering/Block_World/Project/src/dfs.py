@@ -1,6 +1,6 @@
 import numpy as np
 
-from src.ifm_konwoledge_enginnering.Block_World.Project.src import BlockState
+from .BlockState import BlockState
 
 
 def dfs(state:BlockState, max_visited_notes = 1000):

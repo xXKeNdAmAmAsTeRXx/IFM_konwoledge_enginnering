@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from src.ifm_konwoledge_enginnering.Block_World.Project.src.BlockState import BlockState
+from ifm_konwoledge_enginnering.Block_World.Project.src.BlockState import BlockState
 
 def test_valid_state():
     """Poprawny układ powinien zostać zaakceptowany."""

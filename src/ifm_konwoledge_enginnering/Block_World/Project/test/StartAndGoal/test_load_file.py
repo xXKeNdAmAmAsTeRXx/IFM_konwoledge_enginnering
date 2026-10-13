@@ -12,7 +12,7 @@ BlockState(start, goal). Błędy formatu pliku są zgłaszane jako ValueError.
 """
 import pytest
 
-from src.ifm_konwoledge_enginnering.Block_World.Project.src.BlockState import BlockState
+from ifm_konwoledge_enginnering.Block_World.Project.src.BlockState import BlockState
 
 
 def start_layout(state):

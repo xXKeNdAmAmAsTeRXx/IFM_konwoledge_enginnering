@@ -2,6 +2,7 @@ from ipaddress import ip_network
 from typing import Self, Any
 
 import numpy as np
+from .Move import Move
 
 
 
@@ -98,8 +99,7 @@ class BlockState:
 
             # 1. Kolcek na stół
             if clear and not on_table:
-                possible_move = self.current.copy()
-                possible_move[idx] = 0
+                possible_move = Move(block_id, 0)
                 movements.append(possible_move)
 
             # 2. Klocek na inne klocki
@@ -112,8 +112,7 @@ class BlockState:
                         continue
 
                     if d_clear:
-                        possible_move = self.current.copy()
-                        possible_move[idx] = d_block_id
+                        possible_move = Move(block_id, d_idx)
                         movements.append(possible_move)
 
         return movements
