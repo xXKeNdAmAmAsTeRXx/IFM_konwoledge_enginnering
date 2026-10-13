@@ -1,3 +1,5 @@
+from typing import List
+
 import numpy as np
 from .BlockState import BlockState
 from .Move import Move
@@ -57,34 +59,44 @@ class World:
             clear=(block_id not in placement),
         )
 
-    # TODO: Implement legal_moves() as a separate method. Return all valid moves
-    #       without mutating this World: choose only clear source blocks and
-    #       destinations that are either the table (0) or a different clear
-    #       block. Exclude no-op moves and candidate placements that are illegal.
+
+    def legal_moves(self) -> List[Move]:
+        """Return legal moves without changing this world."""
+        moves = []
+        clear_blocks = [state.id for state in self.states if state.clear]
+
+        for moving in clear_blocks:
+            current_destination = int(self.placement[moving - 1])
+            for destination in [0, *clear_blocks]:
+                if destination == moving or destination == current_destination:
+                    continue
+
+                candidate = self.placement.copy()
+                candidate[moving - 1] = destination
+                try:
+                    self._check_if_placement_is_legal(candidate)
+                except ValueError:
+                    continue
+
+                moves.append(Move(moving=moving, destination=destination))
+
+        return moves
+
     def update(self, move: Move) -> None:
         """Apply a move and refresh the affected block states."""
 
-        # TODO: Keep move validation explicit and user-readable: validate IDs
-        #       before indexing states, and raise ValueError rather than relying on
-        #       assert statements that Python can disable.
-        # TODO: Preserve atomic updates: construct and validate the candidate
-        #       placement first, then commit it and rebuild every BlockState so
-        #       the moving block, its former support, and its new support all have
-        #       correct clear/on/on_table values. Destination 0 is the table and
-        #       must never be indexed as a block.
-        # TODO: Add tests for legal moves to the table and onto another clear
-        #       block, blocked sources/destinations, invalid IDs, self-moves, and
-        #       confirming rejected moves leave placement and states unchanged.
-
         #Check if move is leagl
+        #TODO Check if asserst are correct and enough
         assert self.states[move.moving - 1].clear, "Block cannot be moved"
         assert move.destination == 0 or self.states[move.destination - 1].clear, "Destination block is not cleared"
+        assert move.destination != move.moving, "Block cannot be moved onto itself"
+
 
         # Update Placement
         new_placement = self.placement.copy()
         new_placement[move.moving - 1] = move.destination
-        assert self._check_if_placement_is_legal(new_placement), "This Move is not legal"
 
+        assert self._check_if_placement_is_legal(new_placement), "This Placment is not legal, an Illegal Move was commited!!"
         self.placement= new_placement
 
         # Update states
