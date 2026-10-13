@@ -12,8 +12,8 @@ def world_generator(n_blocks: int, rng: np.random.Generator) -> World:
     order = rng.permutation(np.arange(1, n_blocks + 1))
     placement = np.zeros(n_blocks, dtype=np.int32)
 
-    # The first block starts on the table. Later blocks either start
-    # another stack or go on the preceding block.
+    # The first block starts on the table.
+    # Later blocks either start on another stack or go on the preceding block.
     for i in range(1, n_blocks):
         if rng.random() >= 0.35:
             block = int(order[i])
