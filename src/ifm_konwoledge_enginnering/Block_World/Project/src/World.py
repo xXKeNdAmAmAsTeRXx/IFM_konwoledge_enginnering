@@ -113,3 +113,6 @@ class World:
             self._set_BlockState(self.placement, block_id)
             for block_id in range(1, len(placement) + 1)
         ]
+
+    def __len__(self):
+        return len(self.states)
