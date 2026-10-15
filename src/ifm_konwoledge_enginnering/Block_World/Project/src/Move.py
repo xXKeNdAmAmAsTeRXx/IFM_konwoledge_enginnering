@@ -49,11 +49,27 @@ class PossibleMoves:
                         moves.append(Move(state.id, destination.id))
         return moves
     
-    #TODO: Drugi Warinat
-    # @staticmethod
-    # def calculate_block_to_block(States):
-    #     pass
+    @staticmethod
+    def calculate_block_to_block(states: list[BlockState]) -> list[Move]:
+        moves = []
+        for state in states:
+            if state.clear and not state.on_table:
+                for destination in states:
+                    if destination.id == state.id:
+                        continue
+
+                    if destination.clear:
+                        moves.append(Move(state.id, destination.id))
+        return moves
 
 
-def calculate_all_possible_moves(states: list[BlockState]) -> list[Move]:
-    return [*PossibleMoves.calculate_block_to_table(states), *PossibleMoves.calculate_block_from_table(states)]
+def calculate_all_possible_moves(
+    states: list[BlockState], extended: bool = False
+) -> list[Move]:
+    moves = [
+        *PossibleMoves.calculate_block_to_table(states),
+        *PossibleMoves.calculate_block_from_table(states),
+    ]
+    if extended:
+        moves.extend(PossibleMoves.calculate_block_to_block(states))
+    return moves

@@ -59,8 +59,8 @@ class World:
         )
 
 
-    def legal_moves(self) -> List[Move]:
-        return calculate_all_possible_moves(self.states)
+    def legal_moves(self, extended: bool = False) -> List[Move]:
+        return calculate_all_possible_moves(self.states, extended)
 
     def update(self, move: Move) -> None:
         """Apply a move and refresh the affected block states."""
