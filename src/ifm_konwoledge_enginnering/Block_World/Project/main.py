@@ -8,10 +8,12 @@ from pathlib import Path
 
 import numpy as np
 
-from .src.BlockState import BlockState
-from .src.utils.LoadStartAndGoal import LoadStartAndGoal
-from .src.Move import Move
-from .src.World import World
+from ifm_konwoledge_enginnering.Block_World.Project.src.BlockState import BlockState
+from ifm_konwoledge_enginnering.Block_World.Project.src.Move import Move
+from ifm_konwoledge_enginnering.Block_World.Project.src.World import World
+from ifm_konwoledge_enginnering.Block_World.Project.src.utils.LoadStartAndGoal import (
+    LoadStartAndGoal,
+)
 
 
 SAMPLE_FILE = Path(__file__).parent / "src" / "data" / "correct_1.txt"
