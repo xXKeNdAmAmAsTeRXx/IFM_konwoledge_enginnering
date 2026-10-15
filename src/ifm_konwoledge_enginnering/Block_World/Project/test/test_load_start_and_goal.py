@@ -1,8 +1,10 @@
 import pytest
 import numpy as np
 
-from ifm_konwoledge_enginnering.Block_World.Project.src import LoadStartAndGoal as loader_module
-from ifm_konwoledge_enginnering.Block_World.Project.src.LoadStartAndGoal import (
+from ifm_konwoledge_enginnering.Block_World.Project.src.utils import (
+    LoadStartAndGoal as loader_module,
+)
+from ifm_konwoledge_enginnering.Block_World.Project.src.utils.LoadStartAndGoal import (
     LoadStartAndGoal,
 )
 

@@ -1,11 +1,11 @@
 import numpy as np
 import pytest
 
-from ifm_konwoledge_enginnering.Block_World.Project.src.LoadStartAndGoal import (
+from ifm_konwoledge_enginnering.Block_World.Project.src.utils.LoadStartAndGoal import (
     LoadStartAndGoal,
 )
 from ifm_konwoledge_enginnering.Block_World.Project.src.World import World
-from ifm_konwoledge_enginnering.Block_World.Project.src.state_generator import (
+from ifm_konwoledge_enginnering.Block_World.Project.src.utils.state_generator import (
     start_goal_generator,
 )
 

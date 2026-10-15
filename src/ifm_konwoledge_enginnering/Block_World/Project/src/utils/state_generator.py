@@ -1,9 +1,7 @@
 import numpy as np
 
-from .World import World
-from .BlockState import BlockState
+from ..World import World
 from .LoadStartAndGoal import LoadStartAndGoal
-from .Move import Move
 
 def world_generator(n_blocks: int, rng: np.random.Generator) -> World:
     if n_blocks < 1:

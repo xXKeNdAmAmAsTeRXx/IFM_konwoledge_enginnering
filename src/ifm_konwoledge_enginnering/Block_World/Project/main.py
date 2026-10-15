@@ -9,7 +9,7 @@ from pathlib import Path
 import numpy as np
 
 from .src.BlockState import BlockState
-from .src.LoadStartAndGoal import LoadStartAndGoal
+from .src.utils.LoadStartAndGoal import LoadStartAndGoal
 from .src.Move import Move
 from .src.World import World
 

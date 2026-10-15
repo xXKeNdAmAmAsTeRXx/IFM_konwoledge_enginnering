@@ -1,1 +1,1 @@
-"""Search algorithms for the Block World project."""
+"""Search algorithms and shared graph-search utilities."""
