@@ -1,8 +1,5 @@
-from ipaddress import ip_network
-from typing import Self, Any
-
 import numpy as np
-from .World import World
+from ..World import World
 
 
 
@@ -56,4 +53,3 @@ class LoadStartAndGoal:
         assert len(start) == len(goal)
         self.start = start if isinstance(start, World) else World(start)
         self.goal = goal if isinstance(goal, World) else World(goal)
-

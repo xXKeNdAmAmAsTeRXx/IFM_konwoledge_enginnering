@@ -59,3 +59,8 @@ def test_illegal_move_does_not_change_world():
         world.update(Move(moving=2, destination=1))
 
     np.testing.assert_array_equal(world.placement, original_placement)
+
+def test_extended_variant_adds_block_to_block_moves():
+    world = World([0, 1, 0, 2, 3])
+    assert len(world.legal_moves()) == 2
+    assert len(world.legal_moves(extended=True)) == 4
