@@ -16,11 +16,32 @@ SearchStrategy = Literal["bfs", "dfs"]
 
 @dataclass
 class SearchResult:
-    """Path and basic statistics returned by a search."""
+    """Path and basic statistics returned by a search.
+
+    ``peak_stored_states`` is the maximum number of unique states retained in
+    the visited set during the run.
+    """
 
     path: list[Move]
     expanded: int
     elapsed: float
+    peak_stored_states: int
+
+
+class SearchLimitExceeded(RuntimeError):
+    """Search limit error carrying the statistics collected before stopping."""
+
+    def __init__(
+        self,
+        limit: int,
+        expanded: int,
+        peak_stored_states: int,
+        elapsed: float,
+    ):
+        super().__init__(f"Search limit exceeded: {limit} nodes expanded")
+        self.expanded = expanded
+        self.peak_stored_states = peak_stored_states
+        self.elapsed = elapsed
 
 
 def state_key(world: World) -> StateKey:
@@ -70,7 +91,7 @@ def search_with_stats(
     goal_key = state_key(goal)
 
     if start_key == goal_key:
-        return SearchResult([], 0, time.perf_counter() - started_at)
+        return SearchResult([], 0, time.perf_counter() - started_at, 1)
 
     if strategy == "bfs":
         frontier: deque[World] | list[World] = deque([World(start.placement.copy())])
@@ -80,11 +101,15 @@ def search_with_stats(
     visited: set[StateKey] = {start_key}
     parent: dict[StateKey, tuple[StateKey, Move]] = {}
     expanded = 0
+    peak_stored_states = len(visited)
 
     while frontier:
         if expanded >= max_visited_notes:
-            raise RuntimeError(
-                f"Search limit exceeded: {max_visited_notes} nodes expanded"
+            raise SearchLimitExceeded(
+                max_visited_notes,
+                expanded,
+                peak_stored_states,
+                time.perf_counter() - started_at,
             )
 
         world = frontier.popleft() if strategy == "bfs" else frontier.pop()
@@ -105,11 +130,17 @@ def search_with_stats(
                 continue
 
             visited.add(child_key)
+            peak_stored_states = max(peak_stored_states, len(visited))
             parent[child_key] = (world_key, move)
 
             if child_key == goal_key:
                 path = reconstruct_path(parent, start_key, goal_key)
-                return SearchResult(path, expanded, time.perf_counter() - started_at)
+                return SearchResult(
+                    path,
+                    expanded,
+                    time.perf_counter() - started_at,
+                    peak_stored_states,
+                )
 
             frontier.append(child)
 
