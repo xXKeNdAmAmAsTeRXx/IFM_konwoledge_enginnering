@@ -27,6 +27,9 @@ from collections.abc import Callable, Iterable
 from inference import Inference, KnowledgeBase
 from world import START, Action, Cell, Direction, Percept, in_bounds, step
 
+# Kiedy agent podejmie ryzyko
+RISK_THRESHOLD = 0.5
+
 # Stan ciała agenta istotny dla planowania: pozycja i kierunek patrzenia.
 State = tuple[Cell, Direction]
 
@@ -246,7 +249,7 @@ class Agent:
                         visited)
 
                     if self.use_danger_probability:
-                        if route is not None and danger_probs.get(target, 1.0) > 0.5:
+                        if route is not None and danger_probs.get(target, 1.0) > RISK_THRESHOLD:
                             continue
 
                     # Zwróć pierwszego kandydata (najmniejsze ryzyko)
