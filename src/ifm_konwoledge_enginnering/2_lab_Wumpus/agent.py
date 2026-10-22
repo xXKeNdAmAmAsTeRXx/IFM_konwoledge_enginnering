@@ -215,7 +215,7 @@ class Agent:
             # Pomijamy pola, o których wiadomo, że zabijają.
             deadly = inf.pit_certain | inf.alive_certain
             candidates = inf.frontier - deadly
-            route = plan_route(state, lambda c, d: c in candidates, visited)
+            route = #TODO - fix route definition
             if route is not None:
                 self.goal = f"explore {route_target(state, route)}"
                 return route
