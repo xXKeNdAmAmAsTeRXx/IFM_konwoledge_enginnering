@@ -245,6 +245,10 @@ class Agent:
                             ),
                         visited)
 
+                    if self.use_danger_probability:
+                        if route is not None and danger_probs.get(target, 1.0) > 0.5:
+                            continue
+
                     # Zwróć pierwszego kandydata (najmniejsze ryzyko)
                     if route is not None:
                         risk_text = (
