@@ -38,6 +38,8 @@ def run_game(
     risky: bool = False,
     agent_knows_gold: bool = True,
     verbose: bool = True,
+    pit_prob: float = 0.2,
+    use_danger_probability: bool = True,
 ) -> GameResult:
     """Rozgrywa jedną grę agenta w świecie ``config`` i zwraca jej wynik.
 
@@ -46,6 +48,8 @@ def run_game(
     z jaskini albo po ``max_actions`` akcjach.  ``agent_knows_gold`` mówi, czy
     agent zna liczbę sztuk złota; ``verbose`` włącza wypisywanie przebiegu gry
     (prawdziwego świata, kolejnych akcji i mapy wiedzy agenta przy zmianie celu).
+    ``pit_prob`` to prior prawdopodobieństwa jamy używany przez agenta, a
+    ``use_danger_probability`` włącza ranking ryzykownych pól według tego prioru.
     """
     world = World(config)
     # Agent zna rozmiar świata, liczbę wumpusów i strzał, ale nie ich położenie.
@@ -56,6 +60,8 @@ def run_game(
         n_gold=len(config.gold) if agent_knows_gold else None,
         n_arrows=world.arrows,
         risky=risky,
+        pit_prob=pit_prob,
+        use_danger_probability=use_danger_probability,
     )
     t0 = time.perf_counter()
     percept = world.percept()  # percepcja na polu startowym
@@ -94,6 +100,13 @@ def main() -> None:
                     help="use the standard Russell & Norvig 4x4 world (ignores size/pits/wumpus/gold/seed)")
     ap.add_argument("--games", type=int, default=1, help="number of games to play")
     ap.add_argument("--risky", action="store_true", help="gamble when nothing is provably safe")
+    ap.add_argument(
+        "--no-danger-probability",
+        action="store_false",
+        dest="use_danger_probability",
+        help="choose the first risky candidate instead of ranking by danger probability",
+    )
+    ap.set_defaults(use_danger_probability=True)
     ap.add_argument("--unknown-gold", action="store_true", help="agent does not know how much gold there is")
     ap.add_argument("--max-actions", type=int, default=1000)
     ap.add_argument("--quiet", action="store_true", help="only print the summary")
@@ -117,7 +130,17 @@ def main() -> None:
         verbose = not args.quiet
         if verbose and args.games > 1:
             print(f"\n=========== game {i + 1} ===========")
-        results.append(run_game(config, args.max_actions, args.risky, not args.unknown_gold, verbose))
+        results.append(
+            run_game(
+                config,
+                args.max_actions,
+                args.risky,
+                not args.unknown_gold,
+                verbose,
+                pit_prob=0.2 if args.aima else args.pits,
+                use_danger_probability=args.use_danger_probability,
+            )
+        )
 
     if args.games > 1:
         n = len(results)

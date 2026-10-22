@@ -89,6 +89,8 @@ class Agent:
         n_gold: int | None = 1,
         n_arrows: int | None = None,
         risky: bool = False,
+        pit_prob: float = 0.2,
+        use_danger_probability: bool = True,
     ) -> None:
         """Tworzy agenta stojącego na wejściu (1, 1) i patrzącego na wschód.
 
@@ -96,12 +98,23 @@ class Agent:
         jaskinię, dopóki zostały jakieś bezpieczne pola.  ``n_arrows=None``
         oznacza tyle strzał, ile jest wumpusów.  ``risky=True`` pozwala
         agentowi zaryzykować wejście na niepewne pole, gdy nic nie jest
-        na pewno bezpieczne.
+        na pewno bezpieczne. ``pit_prob`` to a priori prawdopodobieństwo jamy,
+        używane do ważenia modeli; ``use_danger_probability`` włącza to ważenie
+        przy wyborze ryzykownego pola.
         """
+        if not 0.0 <= pit_prob <= 1.0:
+            raise ValueError("pit_prob must be in [0, 1]")
+        if risky and use_danger_probability and not 0.0 < pit_prob < 1.0:
+            raise ValueError(
+                "pit_prob must be in (0, 1) when risky danger probabilities are enabled"
+            )
+
         self.width, self.height = width, height
         self.n_gold = n_gold
         self.arrows = n_wumpus if n_arrows is None else n_arrows
         self.risky = risky
+        self.pit_prob = pit_prob
+        self.use_danger_probability = use_danger_probability
         self.kb = KnowledgeBase(width, height, n_wumpus)
         self.pos: Cell = START
         self.direction = Direction.E
@@ -216,13 +229,31 @@ class Agent:
             deadly = inf.pit_certain | inf.alive_certain
             candidates = inf.frontier - deadly
 
-            route = plan_route(state,
-                               lambda c, d: c in visited and step(c, d) in candidates,
-                               visited)
+            if candidates:
+                danger_probs = {}
+                if self.use_danger_probability:
+                    danger_probs = self.kb.danger_probabilities(pit_prob=self.pit_prob)
+                    ordered_candidates = sorted(candidates, key=lambda c: (danger_probs.get(c, 1.0), c))
+                else:
+                    ordered_candidates = [min(candidates)]
 
-            if route is not None:
-                self.goal = f"explore {route_target(state, route)}"
-                return route + [Action.FORWARD]
+                for target in ordered_candidates:
+                    route = plan_route(
+                        state,
+                        lambda c, d, target=target: (
+                                c in visited and step(c, d) == target
+                            ),
+                        visited)
+
+                    # Zwróć pierwszego kandydata (najmniejsze ryzyko)
+                    if route is not None:
+                        risk_text = (
+                            f" ({danger_probs[target]:.0%} danger)"
+                            if self.use_danger_probability
+                            else ""
+                        )
+                        self.goal = f"explore {route_target(state, route)}{risk_text}"
+                        return route + [Action.FORWARD]
 
         return self._go_home("nothing safe left, leave the cave")
 
