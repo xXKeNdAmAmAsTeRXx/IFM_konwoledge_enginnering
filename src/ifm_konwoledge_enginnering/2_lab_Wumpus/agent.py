@@ -215,10 +215,14 @@ class Agent:
             # Pomijamy pola, o których wiadomo, że zabijają.
             deadly = inf.pit_certain | inf.alive_certain
             candidates = inf.frontier - deadly
-            route = #TODO - fix route definition
+
+            route = plan_route(state,
+                               lambda c, d: c in visited and step(c, d) in candidates,
+                               visited)
+
             if route is not None:
                 self.goal = f"explore {route_target(state, route)}"
-                return route
+                return route + [Action.FORWARD]
 
         return self._go_home("nothing safe left, leave the cave")
 
