@@ -52,11 +52,12 @@ def add_axioms(
     opt: z3.Optimize,
     repo: Repository,
     variables: Dict[Tuple[str, str], z3.BoolRef],
-) -> None:
+) -> list:
     """
     Mapping dependencies between packages by using three axioms (A1, A2, A3).
-    Returns None as it motives opt
+    Returns a list of (label, formula) pairs.
     """
+    axioms = []
 
     #A1: one version per package
     for package in repo.packages.values():
@@ -64,7 +65,9 @@ def add_axioms(
 
         if versions:
             label = z3.Bool(f"at most one package of {package.name}")
-            opt.assert_and_track(z3.AtMost(*versions, 1), label)
+            formula = z3.AtMost(*versions, 1)
+            opt.assert_and_track(formula, label)
+            axioms.append((str(label), formula))
 
     #A2: Dependencies (Imply)
     for package in repo.packages.values():
@@ -73,7 +76,9 @@ def add_axioms(
             for requirement in info.requires:
                 requirement_encoded = encode_requirement(requirement, repo, variables)
                 label = z3.Bool(f"Package {package.name} requires {requirement}")
-                opt.assert_and_track(z3.Implies(var, requirement_encoded), label)
+                formula = z3.Implies(var, requirement_encoded)
+                opt.assert_and_track(formula, label)
+                axioms.append((str(label), formula))
 
     #A3: Conflicts (Imply)
     for package in repo.packages.values():
@@ -90,12 +95,14 @@ def add_axioms(
                         label = z3.Bool(
                             f"{package.name}=={version} conflicts with {atom.package}"
                         )
-                        opt.assert_and_track(
-                            z3.Implies(var, z3.Not(z3.Or(matching))),
-                            label,
-                        )
+                        formula = z3.Implies(var, z3.Not(z3.Or(matching)))
+                        opt.assert_and_track(formula, label)
+                        axioms.append((str(label), formula))
 
-def build_knowledge_base(repo: Repository):
+    return axioms
+
+
+def build_knowledge_base(repo: Repository, print_axioms: bool = False):
     """
     Build packages knowledge base,which means map all dependencies between packages into logical condictions.
     """
@@ -103,6 +110,16 @@ def build_knowledge_base(repo: Repository):
     opt = z3.Optimize()
     opt.set(priority="lex")
 
-    add_axioms(opt, repo, variables)
+    axioms = add_axioms(opt, repo, variables)
 
-    return variables, opt
+    if print_axioms:
+        print_example_axioms(axioms)
+
+    return variables, opt, axioms
+
+
+
+
+def print_example_axioms(axioms, limit=25):
+    for label, formula in axioms[:limit]:
+        print(f"{label}: {formula}")
