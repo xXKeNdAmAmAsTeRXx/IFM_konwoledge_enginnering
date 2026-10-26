@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Dict, Tuple
 
 import z3
-from .model import Repository, Atom, Requirement
+from .model import Repository, Atom, Requirement, Package
 
 
 def build_variables(repo: Repository) -> Dict[Tuple[str, str], z3.BoolRef]:
@@ -23,6 +23,9 @@ def encode_constraint(
     repo: Repository,
     variables: Dict[Tuple[str, str], z3.BoolRef],
 ) -> z3.ExprRef:
+    """
+    Create a list (logical or statement) of packages that match given atom constraints.
+    """
 
     versions = repo.versions_of(atom.package)
     matching = []
@@ -37,6 +40,9 @@ def encode_requirement(
     repo: Repository,
     variables: Dict[Tuple[str, str], z3.BoolRef],
 ) -> z3.ExprRef:
+    """
+    Create a list of packages that match requirements including all alternatives.
+    """
 
     alternatives = [encode_constraint(alt, repo, variables) for alt in req.alternatives]
     return z3.Or(*alternatives) if alternatives else z3.BoolVal(False)
@@ -48,12 +54,9 @@ def add_axioms(
     variables: Dict[Tuple[str, str], z3.BoolRef],
 ) -> None:
     """
+    Mapping dependencies between packages by using three axioms (A1, A2, A3).
     Returns None as it motives opt
     """
-    # TODO: A1 at most one version per package
-    # TODO: A2 dependencies via Implies
-    # TODO: A3 conflicts via Implies(..., Not(...))
-    # TODO: attach readable labels with assert_and_track
 
     #A1: one version per package
     for package in repo.packages.values():
@@ -67,22 +70,39 @@ def add_axioms(
     for package in repo.packages.values():
         for version, info in package.versions.items():
             var = variables[(package.name, str(version))]
-            for requirement in info.requirements:
+            for requirement in info.requires:
                 requirement_encoded = encode_requirement(requirement, repo, variables)
                 label = z3.Bool(f"Package {package.name} requires {requirement}")
                 opt.assert_and_track(z3.Implies(var, requirement_encoded), label)
 
     #A3: Conflicts (Imply)
-
-
-
-    raise NotImplementedError
-
+    for package in repo.packages.values():
+        for version, info in package.versions.items():
+            var = variables[(package.name, str(version))]
+            for req in info.conflicts:
+                for atom in req.alternatives:
+                    matching = [
+                        variables[(atom.package, str(v))]
+                        for v in repo.versions_of(atom.package)
+                        if atom.matches_version(v)
+                    ]
+                    if matching:
+                        label = z3.Bool(
+                            f"{package.name}=={version} conflicts with {atom.package}"
+                        )
+                        opt.assert_and_track(
+                            z3.Implies(var, z3.Not(z3.Or(matching))),
+                            label,
+                        )
 
 def build_knowledge_base(repo: Repository):
-    # TODO: build variables
-    # TODO: create z3.Optimize()
-    # TODO: set priority="lex"
-    # TODO: add axioms
-    # TODO: return variables, opt
-    raise NotImplementedError
+    """
+    Build packages knowledge base,which means map all dependencies between packages into logical condictions.
+    """
+    variables = build_variables(repo)
+    opt = z3.Optimize()
+    opt.set(priority="lex")
+
+    add_axioms(opt, repo, variables)
+
+    return variables, opt
