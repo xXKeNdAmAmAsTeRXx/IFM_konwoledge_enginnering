@@ -4,16 +4,15 @@ from packaging.version import Version, InvalidVersion
 from .errors import RepoError
 from .model import Requirement, Constraint, Atom, Repository
 
-PAUSE_SYMBOLS_REGEX = r"[-_.]+"
-PACKAGE_REGEX = re.compile(r'[A-Za-z0-9][A-Za-z0-9._-]*$')
+
 
 
 def normalize_package_name(package_name:str) -> str:
     """
     normalizing package name to lowercase + '-' pause symbol + package name validation
     """
-
-    global PAUSE_SYMBOLS_REGEX, PACKAGE_REGEX
+    PAUSE_SYMBOLS_REGEX = r"[-_.]+"
+    PACKAGE_REGEX = re.compile(r'[A-Za-z0-9][A-Za-z0-9._-]*$')
 
     if not PACKAGE_REGEX.match(package_name):
         raise ValueError("Invalid package name")

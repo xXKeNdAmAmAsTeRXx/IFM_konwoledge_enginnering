@@ -11,6 +11,7 @@ from package_manager.kb import (
     encode_requirement,
     add_axioms,
     build_knowledge_base,
+    print_example_axioms,
 )
 
 
@@ -103,7 +104,7 @@ def test_encode_requirement_alternatives(repo):
 
 
 def test_add_axioms_at_most_one(repo):
-    variables, opt = build_knowledge_base(repo)
+    variables, opt, axioms = build_knowledge_base(repo)
     lib_versions = [variables[("lib", str(v))] for v in repo.packages["lib"].versions]
 
     opt.push()
@@ -114,7 +115,7 @@ def test_add_axioms_at_most_one(repo):
 
 
 def test_add_axioms_dependency(repo):
-    variables, opt = build_knowledge_base(repo)
+    variables, opt, axioms = build_knowledge_base(repo)
 
     opt.push()
     opt.add(variables[("app", "2.0")])
@@ -124,7 +125,7 @@ def test_add_axioms_dependency(repo):
 
 
 def test_add_axioms_conflict(repo):
-    variables, opt = build_knowledge_base(repo)
+    variables, opt, axioms = build_knowledge_base(repo)
 
     opt.push()
     opt.add(variables[("legacy", "1.0")])
@@ -136,12 +137,28 @@ def test_add_axioms_conflict(repo):
 def test_build_knowledge_base_returns(repo):
     result = build_knowledge_base(repo)
     assert isinstance(result, tuple)
-    assert len(result) == 2
-    variables, opt = result
+    assert len(result) == 3
+    variables, opt, axioms = result
     assert isinstance(variables, dict)
     assert isinstance(opt, z3.Optimize)
 
 
 def test_build_knowledge_base_sat(repo):
-    variables, opt = build_knowledge_base(repo)
+    variables, opt, axioms = build_knowledge_base(repo)
     assert opt.check() == z3.sat
+
+
+def test_print_example_axioms(capsys):
+    repo = load_repository(str(Path(__file__).resolve().parent.parent / "examples" / "repo_example.json"))
+    variables, opt, axioms = build_knowledge_base(repo)
+    print_example_axioms(axioms, limit=2)
+    captured = capsys.readouterr()
+    assert "at most one package of" in captured.out
+    assert ":" in captured.out
+
+
+def test_build_knowledge_base_print_flag(capsys):
+    repo = load_repository(str(Path(__file__).resolve().parent.parent / "examples" / "repo_example.json"))
+    variables, opt, axioms = build_knowledge_base(repo, print_axioms=True)
+    captured = capsys.readouterr()
+    assert len(captured.out.strip().splitlines()) > 0
