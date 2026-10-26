@@ -11,6 +11,7 @@ from .versioning import (
     normalize_package_name,
     parse_version,
     parse_requirement,
+    find_unsatisfiable,
 )
 
 
@@ -132,10 +133,20 @@ def parse_repository_text(text: str, source: str = "<input>") -> Repository:
     return Repository(packages=repo_packages, meta=data.get("meta"))
 
 
+def validate_repository(repo: Repository) -> list:
+    """Print and return warnings for requirements that match no version."""
+    warnings = find_unsatisfiable(repo)
+    for path, message in warnings:
+        print(f"WARNING {path}: {message}")
+    return warnings
+
+
 def load_repository(path: str) -> Repository:
     with open(path, "r", encoding="utf-8") as fh:
         text = fh.read()
-    return parse_repository_text(text, source=path)
+    repo = parse_repository_text(text, source=path)
+    validate_repository(repo)
+    return repo
 
 
 def parse_requests_text(text: str, source: str = "<input>") -> List[str]:

@@ -2,7 +2,7 @@ import re
 from packaging.version import Version, InvalidVersion
 
 from .errors import RepoError
-from .model import Requirement, Constraint, Atom
+from .model import Requirement, Constraint, Atom, Repository
 
 PAUSE_SYMBOLS_REGEX = r"[-_.]+"
 PACKAGE_REGEX = re.compile(r'[A-Za-z0-9][A-Za-z0-9._-]*$')
@@ -72,3 +72,34 @@ def parse_requirement(requirements: str, path: str = "") -> Requirement:
     return Requirement(alternatives=atoms)
 
 
+
+
+def requirement_is_satisfiable(req: Requirement, repo: Repository) -> bool:
+    for atom in req.alternatives:
+        versions = repo.versions_of(atom.package)
+        if any(atom.matches_version(v) for v in versions):
+            return True
+    return False
+
+
+def find_unsatisfiable(repo: Repository):
+    results = []
+    for pkg_name, package in repo.packages.items():
+        for version, info in package.versions.items():
+            for i, req in enumerate(info.requires):
+                if not requirement_is_satisfiable(req, repo):
+                    results.append(
+                        (
+                            f"packages['{pkg_name}'].versions['{version}'].requires[{i}]",
+                            f"requirement {req} matches no version in the repository",
+                        )
+                    )
+            for i, req in enumerate(info.conflicts):
+                if not requirement_is_satisfiable(req, repo):
+                    results.append(
+                        (
+                            f"packages['{pkg_name}'].versions['{version}'].conflicts[{i}]",
+                            f"conflict {req} matches no version in the repository",
+                        )
+                    )
+    return results
