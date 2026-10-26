@@ -10,10 +10,14 @@ from .model import Repository, Atom, Requirement
 
 
 def build_variables(repo: Repository) -> Dict[Tuple[str, str], z3.BoolRef]:
-    # TODO: create one Bool per (package, version)
-    # TODO: label it f"{package}=={version}"
-    raise NotImplementedError
+    """Build a dictionary mapping packages names and versions to boolean values."""
+    package_bools = {}
+    for package in repo.packages.values():
+        name = package.name
+        for version in package.versions:
+            package_bools[(name, version)] = z3.BoolVal(f"{name}=={version}")
 
+    return package_bools
 
 def encode_constraint(atom: Atom, repo: Repository) -> z3.ExprRef:
     # TODO: OR of all versions matching atom.constraints
