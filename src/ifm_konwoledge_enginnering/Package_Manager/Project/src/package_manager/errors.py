@@ -18,3 +18,6 @@ class RepoError(PackageError):
 
 class RequestError(PackageError):
     """An error in a request/state file."""
+
+class NoSolutionError(PackageError):
+    """An error when request does not have a solution."""
