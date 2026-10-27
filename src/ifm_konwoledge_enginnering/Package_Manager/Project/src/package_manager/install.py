@@ -1,31 +1,36 @@
-import json
+"""Installation into an empty environment (Task 4.3)."""
 
-from package_manager.errors import NoSolutionError
-from package_manager.kb import build_knowledge_base, encode_requirement
-from package_manager.model import Repository
-from package_manager.versioning import parse_requirement
+from __future__ import annotations
+
+from pathlib import Path
+from typing import List, Tuple
+
 import z3
 
+from .errors import RequestError
+from .kb import build_knowledge_base, encode_requirement
+from .model import Repository
+from .parsing import parse_requests_text
+from .versioning import parse_requirement
 
-def install(repo: Repository, request_strings: list[str]) -> list[tuple[str, str]]:
-    # Parse Requests
+
+def install(
+    repo: Repository,
+    request_strings: List[str],
+    print_axioms: bool = False,
+) -> List[Tuple[str, str]]:
     requests = [parse_requirement(req) for req in request_strings]
 
-    # Build KB
-    variables, opt, axioms = build_knowledge_base(repo)
+    variables, opt, axioms = build_knowledge_base(repo, print_axioms=print_axioms)
 
-    #Add requirements
     for req in requests:
         opt.add(encode_requirement(req, repo, variables))
 
-    # Package Order
     obsolescence = {}
-    for package in repo.packages:
-        versions = repo.versions_of(package)
-        for idx, version in enumerate(versions):
-            obsolescence[(package, str(version))] = idx
+    for package_name in repo.packages:
+        for index, version in enumerate(repo.versions_of(package_name)):
+            obsolescence[(package_name, str(version))] = index
 
-    # Expressions to optimize
     requested_pkgs = {atom.package for req in requests for atom in req.alternatives}
 
     requested_terms = [
@@ -45,17 +50,18 @@ def install(repo: Repository, request_strings: list[str]) -> list[tuple[str, str
     ]
     expr_other = z3.Sum(other_terms) if other_terms else z3.IntVal(0)
 
-    # set optimization
     opt.set(priority="lex")
     opt.minimize(expr_requested)
     opt.minimize(expr_count)
     opt.minimize(expr_other)
 
-    # Solve Request and Repository
     if opt.check() != z3.sat:
-        raise NoSolutionError()
+        raise RequestError("", "no solution for the given requests")
 
     model = opt.model()
-    installed = [(p,v) for (p,v), var in variables.items() if z3.is_true(model.eval(var))]
-
+    installed = [
+        (package, version)
+        for (package, version), var in variables.items()
+        if z3.is_true(model.eval(var))
+    ]
     return installed
