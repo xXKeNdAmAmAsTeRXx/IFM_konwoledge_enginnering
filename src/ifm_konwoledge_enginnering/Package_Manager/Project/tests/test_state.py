@@ -3,8 +3,15 @@ from package_manager.model import State
 from package_manager.state import parse_state, write_state
 from packaging.version import Version
 
-# Test State Parsing
 
+def test_state_get_packages_list_empy():
+    state = State()
+    assert state.get_packages_list() == []
+def test_state_get_packages_list():
+    state = State(packages={"lib": (Version("1.0"), False)})
+    assert state.get_packages_list() == [("lib", "1.0")]
+
+# Test State Parsing
 def test_parse_state_empty():
     assert parse_state("") == State()
 
