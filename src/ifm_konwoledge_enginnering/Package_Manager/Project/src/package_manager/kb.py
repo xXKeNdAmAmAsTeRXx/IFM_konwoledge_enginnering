@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Dict, Tuple
 
 import z3
-from .model import Repository, Atom, Requirement, Package
+from .model import Repository, Atom, Requirement, Package, State
 
 
 def build_variables(repo: Repository) -> Dict[Tuple[str, str], z3.BoolRef]:
@@ -100,7 +100,6 @@ def add_axioms(
                         axioms.append((str(label), formula))
 
     return axioms
-
 
 def build_knowledge_base(repo: Repository, print_axioms: bool = False):
     """
