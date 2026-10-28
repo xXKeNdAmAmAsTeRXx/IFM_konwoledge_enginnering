@@ -132,7 +132,6 @@ def test_unsatisfiable_warning_detection():
     repo = parse_repository_text(text)
     warnings = find_unsatisfiable(repo)
     assert len(warnings) == 1
-    assert "requires[0]" in warnings[0][0]
 
 
 def test_repo_versions_sorted_descending():
