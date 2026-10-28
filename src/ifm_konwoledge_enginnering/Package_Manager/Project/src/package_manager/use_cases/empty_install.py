@@ -15,7 +15,7 @@ from package_manager.infrastructure.solver.knowledge_base import (
 )
 
 
-def install(
+def install_empty(
     repo: Repository,
     request_strings: List[str],
     print_axioms: bool = False,

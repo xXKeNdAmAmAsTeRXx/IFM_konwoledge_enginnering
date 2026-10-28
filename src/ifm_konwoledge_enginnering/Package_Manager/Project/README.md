@@ -66,7 +66,8 @@ axioms, then uses Z3 to find the best installation plan.
 - `src/package_manager/domain/` — models, versioning rules, errors, and
   solver-independent state verification
 - `src/package_manager/use_cases/` — application workflows; `install.py` is
-  the public install entry point and `install_empty.py` implements Task 4
+  the public install entry point, `empty_install.py` implements Task 4, and
+  stateful install, remove, and explain are Task 6 scaffolds
 - `src/package_manager/infrastructure/` — CLI, file parsing/state I/O, and
   the Z3 knowledge-base adapter under `solver/`
 - `tests/` mirrors the `domain/`, `use_cases/`, and `infrastructure/` layers
