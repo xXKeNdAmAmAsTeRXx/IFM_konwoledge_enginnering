@@ -1,13 +1,11 @@
 from pathlib import Path
 
 import pytest
+from packaging.version import Version
 
 from package_manager.infrastructure.parsing import load_repository
 from package_manager.infrastructure.state import parse_state
 from package_manager.use_cases.install import install
-
-
-pytestmark = pytest.mark.skip(reason="Task 6 stateful installation is not implemented yet")
 
 
 @pytest.fixture
@@ -20,7 +18,7 @@ def inputs():
     return repo, state
 
 
-def test_install_updates_existing_state(inputs):
+def test_install_updates_existing_state(inputs, capsys):
     repo, state = inputs
 
     result = install(repo, ["app==2.0"], initial_state=state)
@@ -29,4 +27,13 @@ def test_install_updates_existing_state(inputs):
         "app": "2.0",
         "lib": "2.0",
         "util": "2.0",
+        "json-slow": "1.0",
     }
+    assert result.packages["app"] == (Version("2.0"), True)
+    assert result.packages["lib"] == (Version("2.0"), False)
+
+    output = capsys.readouterr().out
+    assert "Upgrade app 1.0 -> 2.0" in output
+    assert "Upgrade lib 1.0 -> 2.0" in output
+    assert "Install util 2.0" in output
+    assert "Remove tool 1.1" in output
