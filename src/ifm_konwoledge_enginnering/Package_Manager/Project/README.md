@@ -36,3 +36,36 @@ python manager.py install /tmp/requests.txt --repo examples/repo_example.json --
 ```bash
 python -m pytest
 ```
+
+## Documentation
+
+### Overall idea
+This project is a small package manager built with a SAT/SMT solver (Z3).
+It models a repository as a knowledge base of Boolean variables and logical
+axioms, then uses Z3 to find the best installation plan.
+
+### Main classes
+- `Constraint` — one version condition, e.g. `>= 2.0`
+- `Atom` — one package plus its constraints
+- `Requirement` — OR of atoms (alternatives)
+- `VersionInfo` — requires and conflicts for one version
+- `Package` — name and all versions
+- `Repository` — all packages plus metadata
+
+### Workflow
+1. Load repository JSON with `load_repository`
+2. Validate and warn with `validate_repository`
+3. Build Z3 knowledge base with `build_knowledge_base`
+4. Add user requests as constraints
+5. Set optimization objectives
+6. Solve with Z3
+7. Extract installed packages
+8. Verify result with `verify`
+
+### Files
+- `parsing.py` — JSON loading and validation
+- `versioning.py` — name/version/requirement helpers
+- `kb.py` — Z3 encoding
+- `install.py` — install algorithm
+- `verify.py` — independent verification
+- `manager.py` — command-line interface
