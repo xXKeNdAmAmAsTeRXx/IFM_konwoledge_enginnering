@@ -76,3 +76,7 @@ class Repository:
             return []
 
         return sorted(list(self.packages[name].versions.keys()), reverse=True)
+
+@dataclass
+class State:
+    packages: Dict[str, tuple[Version, bool]] = field(default_factory=dict)
