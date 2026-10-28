@@ -89,7 +89,7 @@ def find_unsatisfiable(repo: Repository):
                 if not requirement_is_satisfiable(req, repo):
                     results.append(
                         (
-                            f"packages['{pkg_name}'].versions['{version}'].requires[{i}]",
+                            f"Package {pkg_name}={version} requirement not satisfiable",
                             f"requirement {req} matches no version in the repository",
                         )
                     )
@@ -97,7 +97,7 @@ def find_unsatisfiable(repo: Repository):
                 if not requirement_is_satisfiable(req, repo):
                     results.append(
                         (
-                            f"packages['{pkg_name}'].versions['{version}'].conflicts[{i}]",
+                            f"Package {pkg_name}={version} conflicts {req}",
                             f"conflict {req} matches no version in the repository",
                         )
                     )
