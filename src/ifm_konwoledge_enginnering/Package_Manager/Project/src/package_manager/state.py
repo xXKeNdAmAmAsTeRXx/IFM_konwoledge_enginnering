@@ -16,3 +16,9 @@ def parse_state(text: str) -> State:
 
     return State(packages=state)
 
+def write_state(state: State) -> str:
+    lines = []
+    for package, (version, manual) in state.packages.items():
+        lines.append(f"{package} {version}{" manual" if manual else ""}")
+
+    return "\n".join(lines) + "\n" if lines else ""
