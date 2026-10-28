@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Dict, Tuple
 
 import z3
-from .model import Repository, Atom, Requirement, Package, State
+from package_manager.domain.model import Repository, Atom, Requirement
 
 
 def build_variables(repo: Repository) -> Dict[Tuple[str, str], z3.BoolRef]:

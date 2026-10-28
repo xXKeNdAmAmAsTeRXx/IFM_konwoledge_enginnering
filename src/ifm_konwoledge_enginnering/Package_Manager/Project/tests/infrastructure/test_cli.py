@@ -2,7 +2,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-BASE = Path(__file__).resolve().parent.parent
+BASE = Path(__file__).resolve().parents[2]
 MANAGER = BASE / "manager.py"
 
 

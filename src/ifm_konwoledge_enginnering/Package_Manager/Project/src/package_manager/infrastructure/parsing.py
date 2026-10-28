@@ -5,9 +5,9 @@ from __future__ import annotations
 import json
 from typing import List
 
-from .errors import RepoError
-from .model import Package, Repository, VersionInfo
-from .versioning import (
+from package_manager.domain.errors import RepoError
+from package_manager.domain.model import Package, Repository, VersionInfo
+from package_manager.domain.versioning import (
     normalize_package_name,
     parse_version,
     parse_requirement,

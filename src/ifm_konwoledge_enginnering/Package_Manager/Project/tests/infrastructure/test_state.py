@@ -1,6 +1,6 @@
 import pytest
-from package_manager.model import State
-from package_manager.state import parse_state, write_state
+from package_manager.domain.model import State
+from package_manager.infrastructure.state import parse_state, write_state
 from packaging.version import Version
 
 

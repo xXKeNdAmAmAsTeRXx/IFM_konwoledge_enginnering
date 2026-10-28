@@ -3,16 +3,16 @@ from pathlib import Path
 import z3
 import pytest
 
-from package_manager.parsing import load_repository
-from package_manager.kb import build_knowledge_base
-from package_manager.state import parse_state, apply_state
-from package_manager.versioning import parse_version
-from package_manager.model import State
+from package_manager.infrastructure.parsing import load_repository
+from package_manager.infrastructure.solver.knowledge_base import build_knowledge_base
+from package_manager.infrastructure.state import parse_state, apply_state
+from package_manager.domain.versioning import parse_version
+from package_manager.domain.model import State
 
 
 @pytest.fixture
 def repo():
-    base = Path(__file__).resolve().parent.parent
+    base = Path(__file__).resolve().parents[2]
     return load_repository(base / "examples" / "repo_example.json")
 
 

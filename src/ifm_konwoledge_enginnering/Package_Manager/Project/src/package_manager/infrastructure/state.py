@@ -1,20 +1,22 @@
 import z3
 
-from package_manager.model import State
-from package_manager.versioning import parse_version
+from package_manager.domain.model import State
+from package_manager.domain.versioning import parse_version, normalize_package_name
 
 
 def parse_state(text: str) -> State:
     state = {}
     for raw in text.splitlines():
-        if raw[0] == "#" or not raw:
+        line = raw.split("#", 1)[0].strip()
+        if not line:
             continue
 
-        line = raw.split(" ")
-        name, version = line[:2]
-        manual = True if line[-1] == "manual" else False
+        parts = line.split()
+        name = normalize_package_name(parts[0])
+        version = parse_version(parts[1])
+        manual = len(parts) > 2 and parts[2] == "manual"
 
-        state[name] = (parse_version(version), manual)
+        state[name] = (version, manual)
 
     return State(packages=state)
 
@@ -26,7 +28,7 @@ def write_state(state: State) -> str:
     return "\n".join(lines) + "\n" if lines else ""
 
 def apply_state(opt, repo, variables, state):
-    installed_keys = state.get_packages_list()
+    installed_keys = {(name, str(version)) for name, (version, _) in state.packages.items()}
     for package in repo.packages.values():
         for version in package.versions:
             key = (package.name, str(version))

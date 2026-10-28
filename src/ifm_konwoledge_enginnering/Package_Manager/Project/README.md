@@ -62,10 +62,14 @@ axioms, then uses Z3 to find the best installation plan.
 7. Extract installed packages
 8. Verify result with `verify`
 
-### Files
-- `parsing.py` — JSON loading and validation
-- `versioning.py` — name/version/requirement helpers
-- `kb.py` — Z3 encoding
-- `install.py` — install algorithm
-- `verify.py` — independent verification
-- `manager.py` — command-line interface
+### Architecture
+- `src/package_manager/domain/` — models, versioning rules, errors, and
+  solver-independent state verification
+- `src/package_manager/use_cases/` — application workflows; `install.py` is
+  the public install entry point and `install_empty.py` implements Task 4
+- `src/package_manager/infrastructure/` — CLI, file parsing/state I/O, and
+  the Z3 knowledge-base adapter under `solver/`
+- `tests/` mirrors the `domain/`, `use_cases/`, and `infrastructure/` layers
+- `manager.py` — command-line entry point
+
+Task 6 workflows are not implemented by this structural refactor.

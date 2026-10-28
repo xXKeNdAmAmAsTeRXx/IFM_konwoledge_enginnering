@@ -3,9 +3,9 @@ from pathlib import Path
 import z3
 import pytest
 
-from package_manager.parsing import load_repository
-from package_manager.versioning import parse_requirement
-from package_manager.kb import (
+from package_manager.infrastructure.parsing import load_repository
+from package_manager.domain.versioning import parse_requirement
+from package_manager.infrastructure.solver.knowledge_base import (
     build_variables,
     encode_constraint,
     encode_requirement,
@@ -17,7 +17,7 @@ from package_manager.kb import (
 
 @pytest.fixture
 def repo():
-    base = Path(__file__).resolve().parent.parent
+    base = Path(__file__).resolve().parents[2]
     return load_repository(base / "examples" / "repo_example.json")
 
 
@@ -149,7 +149,7 @@ def test_build_knowledge_base_sat(repo):
 
 
 def test_print_example_axioms(capsys):
-    repo = load_repository(str(Path(__file__).resolve().parent.parent / "examples" / "repo_example.json"))
+    repo = load_repository(str(Path(__file__).resolve().parents[2] / "examples" / "repo_example.json"))
     variables, opt, axioms = build_knowledge_base(repo)
     print_example_axioms(axioms, limit=2)
     captured = capsys.readouterr()
@@ -158,7 +158,7 @@ def test_print_example_axioms(capsys):
 
 
 def test_build_knowledge_base_print_flag(capsys):
-    repo = load_repository(str(Path(__file__).resolve().parent.parent / "examples" / "repo_example.json"))
+    repo = load_repository(str(Path(__file__).resolve().parents[2] / "examples" / "repo_example.json"))
     variables, opt, axioms = build_knowledge_base(repo, print_axioms=True)
     captured = capsys.readouterr()
     assert len(captured.out.strip().splitlines()) > 0
