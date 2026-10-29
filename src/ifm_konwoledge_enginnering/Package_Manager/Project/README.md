@@ -62,10 +62,58 @@ axioms, then uses Z3 to find the best installation plan.
 7. Extract installed packages
 8. Verify result with `verify`
 
-### Files
-- `parsing.py` — JSON loading and validation
-- `versioning.py` — name/version/requirement helpers
-- `kb.py` — Z3 encoding
-- `install.py` — install algorithm
-- `verify.py` — independent verification
-- `manager.py` — command-line interface
+### Architecture
+- `src/package_manager/domain/` — models, versioning rules, errors, and
+  solver-independent state verification
+- `src/package_manager/use_cases/` — application workflows; `install.py` is
+  the public install entry point, `empty_install.py` implements Task 4, and
+  stateful install, remove, and explain are Task 6 scaffolds
+- `src/package_manager/infrastructure/` — CLI, file parsing/state I/O, and
+  the Z3 knowledge-base adapter under `solver/`
+- `tests/` mirrors the `domain/`, `use_cases/`, and `infrastructure/` layers
+- `manager.py` — command-line entry point
+
+### Project structure
+```text
+Project/
+├── manager.py
+├── examples/
+├── experiment.ipynb
+├── src/package_manager/
+│   ├── domain/
+│   │   ├── errors.py
+│   │   ├── model.py
+│   │   ├── verification.py
+│   │   └── versioning.py
+│   ├── infrastructure/
+│   │   ├── cli.py
+│   │   ├── parsing.py
+│   │   ├── state.py
+│   │   └── solver/
+│   │       ├── knowledge_base.py
+│   │       └── objective_builders.py
+│   └── use_cases/
+│       ├── empty_install.py
+│       ├── explain.py
+│       ├── install.py
+│       ├── install_with_state.py
+│       └── remove.py
+└── tests/
+    ├── domain/
+    │   ├── test_verification.py
+    │   └── test_versioning.py
+    ├── infrastructure/
+    │   ├── test_apply_state.py
+    │   ├── test_knowledge_base.py
+    │   ├── test_parsing.py
+    │   ├── test_state.py
+    │   └── test_cli.py
+    └── use_cases/
+        ├── test_explain.py
+        ├── test_install.py
+        ├── test_install_change_plan.py
+        ├── test_install_with_state.py
+        └── test_remove.py
+```
+
+Task 6 workflows are not implemented by this structural refactor.

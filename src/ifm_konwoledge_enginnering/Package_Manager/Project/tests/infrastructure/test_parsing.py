@@ -4,13 +4,13 @@ import tempfile
 
 import pytest
 
-from package_manager.errors import RepoError
-from package_manager.parsing import parse_repository_text, load_repository
-from package_manager.versioning import find_unsatisfiable
+from package_manager.domain.errors import RepoError
+from package_manager.infrastructure.parsing import parse_repository_text, load_repository
+from package_manager.domain.versioning import find_unsatisfiable
 
 
 EXAMPLE_REPO = os.path.join(
-    os.path.dirname(__file__), "..", "examples", "repo_example.json"
+    os.path.dirname(__file__), "..", "..", "examples", "repo_example.json"
 )
 
 

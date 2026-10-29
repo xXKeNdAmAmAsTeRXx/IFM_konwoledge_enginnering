@@ -2,19 +2,21 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import List, Tuple
 
 import z3
 
-from .errors import RequestError
-from .kb import build_knowledge_base, encode_requirement
-from .model import Repository
-from .parsing import parse_requests_text
-from .versioning import parse_requirement
+from package_manager.domain.errors import RequestError
+from package_manager.domain.model import Repository
+from package_manager.domain.versioning import parse_requirement
+from package_manager.infrastructure.solver.knowledge_base import (
+    build_knowledge_base,
+    encode_requirement,
+)
+from package_manager.infrastructure.solver.objective_builders import obsolescence_cost
 
 
-def install(
+def install_empty(
     repo: Repository,
     request_strings: List[str],
     print_axioms: bool = False,
@@ -26,29 +28,30 @@ def install(
     for req in requests:
         opt.add(encode_requirement(req, repo, variables))
 
-    obsolescence = {}
-    for package_name in repo.packages:
-        for index, version in enumerate(repo.versions_of(package_name)):
-            obsolescence[(package_name, str(version))] = index
+    obsolescence = [
+        (package_name, str(version), rank)
+        for package_name in repo.packages
+        for rank, version in enumerate(repo.versions_of(package_name))
+    ]
 
     requested_pkgs = {atom.package for req in requests for atom in req.alternatives}
 
-    requested_terms = [
-        obsolescence[(p, v)] * z3.If(variables[(p, v)], 1, 0)
-        for (p, v) in variables
-        if p in requested_pkgs
+    requested_obsolescence = [
+        (package_name, version, rank)
+        for package_name, version, rank in obsolescence
+        if package_name in requested_pkgs
     ]
-    expr_requested = z3.Sum(requested_terms) if requested_terms else z3.IntVal(0)
+    expr_requested = obsolescence_cost(repo, variables, requested_obsolescence)
 
     count_terms = [z3.If(v, 1, 0) for v in variables.values()]
     expr_count = z3.Sum(count_terms) if count_terms else z3.IntVal(0)
 
-    other_terms = [
-        obsolescence[(p, v)] * z3.If(variables[(p, v)], 1, 0)
-        for (p, v) in variables
-        if p not in requested_pkgs
+    other_obsolescence = [
+        (package_name, version, rank)
+        for package_name, version, rank in obsolescence
+        if package_name not in requested_pkgs
     ]
-    expr_other = z3.Sum(other_terms) if other_terms else z3.IntVal(0)
+    expr_other = obsolescence_cost(repo, variables, other_obsolescence)
 
     opt.set(priority="lex")
     opt.minimize(expr_requested)

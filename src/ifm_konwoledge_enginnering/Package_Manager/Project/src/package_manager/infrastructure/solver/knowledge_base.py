@@ -5,7 +5,19 @@ from __future__ import annotations
 from typing import Dict, Tuple
 
 import z3
-from .model import Repository, Atom, Requirement, Package
+from package_manager.domain.model import Repository, Atom, Requirement
+
+
+def package_version_vars(
+    repo: Repository,
+    variables: Dict[Tuple[str, str], z3.BoolRef],
+    package_name: str,
+) -> list[z3.BoolRef]:
+    """Return Z3 variables for every version of a package in the repository."""
+    return [
+        variables[(package_name, str(version))]
+        for version in repo.versions_of(package_name)
+    ]
 
 
 def build_variables(repo: Repository) -> Dict[Tuple[str, str], z3.BoolRef]:
@@ -100,7 +112,6 @@ def add_axioms(
                         axioms.append((str(label), formula))
 
     return axioms
-
 
 def build_knowledge_base(repo: Repository, print_axioms: bool = False):
     """
