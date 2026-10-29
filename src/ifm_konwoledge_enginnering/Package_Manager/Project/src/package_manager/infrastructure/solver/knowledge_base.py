@@ -8,6 +8,18 @@ import z3
 from package_manager.domain.model import Repository, Atom, Requirement
 
 
+def package_version_vars(
+    repo: Repository,
+    variables: Dict[Tuple[str, str], z3.BoolRef],
+    package_name: str,
+) -> list[z3.BoolRef]:
+    """Return Z3 variables for every version of a package in the repository."""
+    return [
+        variables[(package_name, str(version))]
+        for version in repo.versions_of(package_name)
+    ]
+
+
 def build_variables(repo: Repository) -> Dict[Tuple[str, str], z3.BoolRef]:
     """Build a dictionary mapping packages names and versions to boolean values."""
     package_bools = {}

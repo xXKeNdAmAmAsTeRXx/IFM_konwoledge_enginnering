@@ -11,6 +11,7 @@ from package_manager.domain.versioning import parse_requirement, parse_version
 from package_manager.infrastructure.solver.knowledge_base import (
     build_knowledge_base,
     encode_requirement,
+    package_version_vars,
 )
 
 
@@ -66,10 +67,7 @@ def install_with_state(
     # 1. Minimize removed packages:
     removed_terms = []
     for package_name, _ in installed_packages:
-        version_vars = [
-            variables[(package_name, str(version))]
-            for version in repo.versions_of(package_name)
-        ]
+        version_vars = package_version_vars(repo, variables, package_name)
         selected_any = z3.Or(*version_vars) if version_vars else z3.BoolVal(False)
         removed_terms.append(z3.If(selected_any, 0, 1))
 
@@ -78,10 +76,7 @@ def install_with_state(
     # 2. Minimize version changes for packages that remain installed:
     changed_terms = []
     for package_name, old_version in installed_packages:
-        version_vars = [
-            variables[(package_name, str(version))]
-            for version in repo.versions_of(package_name)
-        ]
+        version_vars = package_version_vars(repo, variables, package_name)
         selected_any = z3.Or(*version_vars) if version_vars else z3.BoolVal(False)
         old_version_selected = variables[(package_name, old_version)]
         changed_and_retained = z3.And(selected_any, z3.Not(old_version_selected))
@@ -116,10 +111,7 @@ def install_with_state(
         if package_name in installed_names:
             continue
 
-        version_vars = [
-            variables[(package_name, str(version))]
-            for version in repo.versions_of(package_name)
-        ]
+        version_vars = package_version_vars(repo, variables, package_name)
         selected_any = z3.Or(*version_vars) if version_vars else z3.BoolVal(False)
         added_terms.append(z3.If(selected_any, 1, 0))
 
