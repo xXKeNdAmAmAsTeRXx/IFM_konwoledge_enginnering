@@ -11,7 +11,12 @@ from package_manager.domain.versioning import parse_requirement, parse_version
 from package_manager.infrastructure.solver.knowledge_base import (
     build_knowledge_base,
     encode_requirement,
-    package_version_vars,
+)
+from package_manager.infrastructure.solver.objective_builders import (
+    count_selected_packages,
+    count_unselected_packages,
+    count_version_changes,
+    obsolescence_cost,
 )
 
 
@@ -65,57 +70,34 @@ def install_with_state(
     installed_names = {package_name for package_name, _ in installed_packages}
 
     # 1. Minimize removed packages:
-    removed_terms = []
-    for package_name, _ in installed_packages:
-        version_vars = package_version_vars(repo, variables, package_name)
-        selected_any = z3.Or(*version_vars) if version_vars else z3.BoolVal(False)
-        removed_terms.append(z3.If(selected_any, 0, 1))
-
-    expr_removed = z3.Sum(removed_terms) if removed_terms else z3.IntVal(0)
+    expr_removed = count_unselected_packages(repo, variables, installed_names)
 
     # 2. Minimize version changes for packages that remain installed:
-    changed_terms = []
-    for package_name, old_version in installed_packages:
-        version_vars = package_version_vars(repo, variables, package_name)
-        selected_any = z3.Or(*version_vars) if version_vars else z3.BoolVal(False)
-        old_version_selected = variables[(package_name, old_version)]
-        changed_and_retained = z3.And(selected_any, z3.Not(old_version_selected))
-        changed_terms.append(z3.If(changed_and_retained, 1, 0))
-
-    expr_changed = (z3.Sum(changed_terms) if changed_terms else z3.IntVal(0))
+    expr_changed = count_version_changes(repo, variables, installed_packages)
 
     # 3. Minimize obsolescence of requested packages not initially installed:
     requests = [parse_requirement(request) for request in request_strings]
     for request in requests:
         opt.add(encode_requirement(request, repo, variables))
 
-    obsolescence = {}
-    for requirement in requests:
-        for atom in requirement.alternatives:
-            if atom.package not in installed_names:
-                for rank, version in enumerate(repo.versions_of(atom.package)):
-                    obsolescence[(atom.package, str(version))] = rank
-
-    obsolescence_terms = [
-        rank * z3.If(variables[key], 1, 0)
-        for key, rank in obsolescence.items()
+    requested_obsolescence = [
+        (atom.package, str(version), rank)
+        for requirement in requests
+        for atom in requirement.alternatives
+        if atom.package not in installed_names
+        for rank, version in enumerate(repo.versions_of(atom.package))
     ]
-
-    expr_obsolescence = (
-        z3.Sum(obsolescence_terms) if obsolescence_terms else z3.IntVal(0)
+    expr_obsolescence = obsolescence_cost(
+        repo,
+        variables,
+        requested_obsolescence,
     )
 
     # Minimize the number of new packages:
-    added_terms = []
-    for package_name in repo.packages:
-        if package_name in installed_names:
-            continue
-
-        version_vars = package_version_vars(repo, variables, package_name)
-        selected_any = z3.Or(*version_vars) if version_vars else z3.BoolVal(False)
-        added_terms.append(z3.If(selected_any, 1, 0))
-
-    expr_added = (z3.Sum(added_terms) if added_terms else z3.IntVal(0))
+    new_package_names = [
+        package_name for package_name in repo.packages if package_name not in installed_names
+    ]
+    expr_added = count_selected_packages(repo, variables, new_package_names)
 
     # Minimie obsolescence of other new packages:
     requested_names = {
@@ -123,26 +105,13 @@ def install_with_state(
         for requirement in requests
         for atom in requirement.alternatives
     }
-
-    obsolescence = {}
-    for package_name in repo.packages:
-        if package_name in requested_names:
-            continue
-
-        if package_name in installed_names:
-            continue
-
-        for rank, version in enumerate(repo.versions_of(package_name)):
-            obsolescence[(package_name, str(version))] = rank
-
-    obsolescence_terms = [
-        rank * z3.If(variables[key], 1, 0)
-        for key, rank in obsolescence.items()
+    other_obsolescence = [
+        (package_name, str(version), rank)
+        for package_name in repo.packages
+        if package_name not in requested_names and package_name not in installed_names
+        for rank, version in enumerate(repo.versions_of(package_name))
     ]
-
-    expr_obsolescence_new = (
-        z3.Sum(obsolescence_terms) if obsolescence_terms else z3.IntVal(0)
-    )
+    expr_obsolescence_new = obsolescence_cost(repo, variables, other_obsolescence)
 
 
     opt.set(priority="lex")

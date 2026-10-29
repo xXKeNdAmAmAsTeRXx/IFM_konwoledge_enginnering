@@ -11,6 +11,11 @@ from package_manager.infrastructure.solver.knowledge_base import (
     build_knowledge_base,
     package_version_vars,
 )
+from package_manager.infrastructure.solver.objective_builders import (
+    count_selected_packages,
+    count_unselected_packages,
+    count_version_changes,
+)
 from package_manager.domain.model import Repository, State
 
 
@@ -40,56 +45,32 @@ def remove(
 
     # 1. Minimal Amount of Removed Manual Packages outside packages_name
     manually_installed_packages = [p for p, (v, m) in state.packages.items() if m]
-    removed_installed_terms = []
-    for package_name in manually_installed_packages:
-
-        if package_name in package_names:
-            continue
-
-        version_vars = package_version_vars(repo, variables, package_name)
-        selected_any = z3.Or(*version_vars) if version_vars else z3.BoolVal(False)
-        removed_installed_terms.append(z3.If(selected_any, 0, 1))
-
-    expr_installed_removed = z3.Sum(removed_installed_terms) if removed_installed_terms else z3.IntVal(0)
+    manual_packages_outside_removals = [
+        package_name
+        for package_name in manually_installed_packages
+        if package_name not in package_names
+    ]
+    expr_installed_removed = count_unselected_packages(
+        repo,
+        variables,
+        manual_packages_outside_removals,
+    )
 
     # 2. Minimal Amount of Version Changes
-    changed_terms = []
-    for package_name, old_version in installed_packages:
-        version_vars = package_version_vars(repo, variables, package_name)
-        selected_any = z3.Or(*version_vars) if version_vars else z3.BoolVal(False)
-        old_version_selected = variables[(package_name, old_version)]
-        changed_and_retained = z3.And(selected_any, z3.Not(z3.Or(old_version_selected)))
-        changed_terms.append(z3.If(changed_and_retained, 1, 0))
-
-    expr_changed = z3.Sum(changed_terms) if changed_terms else z3.IntVal(0)
+    expr_changed = count_version_changes(repo, variables, installed_packages)
 
     # 3. Minimal Amount of new package
-    added_terms = []
-    for package_name, _ in repo.packages.items():
-        if package_name in [p for (p, _) in installed_packages]:
-            continue
-
-        version_vars = package_version_vars(repo, variables, package_name)
-        selected_any = z3.Or(*version_vars) if version_vars else z3.BoolVal(False)
-        added_terms.append(z3.If(selected_any, 1, 0))
-
-    expr_added = z3.Sum(added_terms) if added_terms else z3.IntVal(0)
+    installed_names = {package_name for package_name, _ in installed_packages}
+    new_package_names = [
+        package_name for package_name in repo.packages if package_name not in installed_names
+    ]
+    expr_added = count_selected_packages(repo, variables, new_package_names)
 
     # 4. Minimal Amount of Delete Packages
     if autoremove:
-        removed_terms = []
-        for package_name, _ in repo.packages.items():
-            version_vars = package_version_vars(repo, variables, package_name)
-            selected_any = z3.Or(*version_vars) if version_vars else z3.BoolVal(False)
-            removed_terms.append(z3.If(selected_any, 1, 0))
-        expr_removed = z3.Sum(removed_terms) if removed_terms else z3.IntVal(0)
+        expr_removed = count_selected_packages(repo, variables, repo.packages)
     else:
-        removed_terms = []
-        for package_name, _ in installed_packages:
-            version_vars = package_version_vars(repo, variables, package_name)
-            selected_any = z3.Or(*version_vars) if version_vars else z3.BoolVal(False)
-            removed_terms.append(z3.If(selected_any, 0, 1))
-        expr_removed = z3.Sum(removed_terms) if removed_terms else z3.IntVal(0)
+        expr_removed = count_unselected_packages(repo, variables, installed_names)
 
     opt.set(priority="lex")
     opt.minimize(expr_installed_removed)

@@ -73,4 +73,47 @@ axioms, then uses Z3 to find the best installation plan.
 - `tests/` mirrors the `domain/`, `use_cases/`, and `infrastructure/` layers
 - `manager.py` — command-line entry point
 
+### Project structure
+```text
+Project/
+├── manager.py
+├── examples/
+├── experiment.ipynb
+├── src/package_manager/
+│   ├── domain/
+│   │   ├── errors.py
+│   │   ├── model.py
+│   │   ├── verification.py
+│   │   └── versioning.py
+│   ├── infrastructure/
+│   │   ├── cli.py
+│   │   ├── parsing.py
+│   │   ├── state.py
+│   │   └── solver/
+│   │       ├── knowledge_base.py
+│   │       └── objective_builders.py
+│   └── use_cases/
+│       ├── empty_install.py
+│       ├── explain.py
+│       ├── install.py
+│       ├── install_with_state.py
+│       └── remove.py
+└── tests/
+    ├── domain/
+    │   ├── test_verification.py
+    │   └── test_versioning.py
+    ├── infrastructure/
+    │   ├── test_apply_state.py
+    │   ├── test_knowledge_base.py
+    │   ├── test_parsing.py
+    │   ├── test_state.py
+    │   └── test_cli.py
+    └── use_cases/
+        ├── test_explain.py
+        ├── test_install.py
+        ├── test_install_change_plan.py
+        ├── test_install_with_state.py
+        └── test_remove.py
+```
+
 Task 6 workflows are not implemented by this structural refactor.
