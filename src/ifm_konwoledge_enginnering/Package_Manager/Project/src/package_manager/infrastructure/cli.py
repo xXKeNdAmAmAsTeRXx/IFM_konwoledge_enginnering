@@ -38,6 +38,16 @@ def _read_requests(path: str) -> list[str]:
     return parse_requests_text(text, source=path)
 
 
+def _collect_requests(args: argparse.Namespace) -> list[str]:
+    request_strings = []
+    if getattr(args, "requests", None):
+        request_strings.extend(_read_requests(args.requests))
+    request_strings.extend(getattr(args, "request", []))
+    if not request_strings:
+        raise RequestError("requests", "provide a request file or --request")
+    return request_strings
+
+
 def _read_state_if_present(path: Path) -> State | None:
     if not path.exists():
         return None
@@ -111,7 +121,7 @@ def _run_install(
     state_path: Path,
 ) -> int:
     repo = load_repository(repo_path, show_warnings=args.show_warnings)
-    request_strings = _read_requests(args.requests)
+    request_strings = _collect_requests(args)
     initial_state = _read_state_if_present(state_path)
     if initial_state is not None:
         _validate_state(repo, initial_state)
@@ -180,7 +190,7 @@ def _run_list(
 
 def _run_explain(args: argparse.Namespace, repo_path: Path) -> int:
     repo = load_repository(repo_path, show_warnings=args.show_warnings)
-    request_strings = _read_requests(args.requests)
+    request_strings = _collect_requests(args)
     _print_explanation(explain(repo, request_strings))
     return 0
 
@@ -200,7 +210,16 @@ def _build_parser() -> argparse.ArgumentParser:
         "install", help="Install requests and save the resulting state"
     )
     install_parser.add_argument(
-        "requests", help="Path to a file containing package requests"
+        "requests",
+        nargs="?",
+        help="Optional path to a file containing package requests",
+    )
+    install_parser.add_argument(
+        "-r",
+        "--request",
+        action="append",
+        default=[],
+        help="Request string, e.g. app==2.0; may be repeated",
     )
     install_parser.add_argument(
         "--print-axioms",
@@ -226,7 +245,16 @@ def _build_parser() -> argparse.ArgumentParser:
         "explain", help="Explain an unsatisfiable request set"
     )
     explain_parser.add_argument(
-        "requests", help="Path to a file containing package requests"
+        "requests",
+        nargs="?",
+        help="Optional path to a file containing package requests",
+    )
+    explain_parser.add_argument(
+        "-r",
+        "--request",
+        action="append",
+        default=[],
+        help="Request string, e.g. app==2.0; may be repeated",
     )
     _add_warning_option(explain_parser)
 

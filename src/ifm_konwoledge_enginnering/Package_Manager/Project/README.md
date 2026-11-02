@@ -27,19 +27,21 @@ python manager.py explain --help
 
 ### Commands
 
-- `install REQUESTS` reads one request per line. If `state.txt` does not exist,
-  installation starts from an empty environment; otherwise the existing
-  environment is updated. Successful changes are saved automatically.
-  `--print-axioms` prints repository axioms used by the solver.
+- `install [REQUESTS] [-r REQUEST]...` reads requests from a file and/or
+  `--request` flags. If `state.txt` does not exist, installation starts from
+  an empty environment; otherwise the existing environment is updated.
+  Successful changes are saved automatically. `--print-axioms` prints
+  repository axioms used by the solver. At least one request source is required.
 - `remove PACKAGE...` removes one or more packages from the saved environment
   and saves the result. `--autoremove` also removes automatically installed
   packages that are no longer needed.
 - `list` displays packages in the saved environment, including their versions
   and whether they are marked `manual`. It does not list every package
   available in the repository.
-- `explain REQUESTS` checks requests against the fixed repository. For an
-  impossible set it prints a minimal unsatisfiable core without changing the
-  saved environment. A failed `install` prints the same kind of explanation.
+- `explain [REQUESTS] [-r REQUEST]...` checks requests against the fixed
+  repository. For an impossible set it prints a minimal unsatisfiable core
+  without changing the saved environment. A failed `install` prints the same
+  kind of explanation. At least one request source is required.
 - Repository validation warnings are suppressed by default. Add
   `--show-warnings` to `install`, `remove`, `list`, or `explain` to display them
   on stderr; repository validation still runs without the flag.
@@ -56,6 +58,9 @@ Run these from the project directory. They use the fixed k12 repository:
 # Install a package into the persistent environment.
 printf 'async-generator\n' > /tmp/requests.txt
 python manager.py install /tmp/requests.txt
+
+# Install directly without creating a request file.
+python manager.py install -r async-generator
 
 # Display the saved environment.
 python manager.py list
