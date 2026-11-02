@@ -10,6 +10,7 @@ from package_manager.infrastructure.solver.knowledge_base import (
     encode_constraint,
     encode_requirement,
     add_axioms,
+    build_axioms,
     build_knowledge_base,
     print_example_axioms,
 )
@@ -101,6 +102,26 @@ def test_encode_requirement_alternatives(repo):
     solver = z3.Solver()
     solver.add(formula)
     assert solver.check() == z3.sat
+
+
+def test_build_axioms_labels_include_source_version(repo):
+    variables = build_variables(repo)
+    axioms = build_axioms(repo, variables)
+    labels = [label for label, _ in axioms]
+
+    assert "Package app==2.0 requires lib >=2.0" in labels
+    assert "Package tool==1.0 requires lib <2.0" in labels
+    assert "Package tool==1.1 requires lib <2.0" in labels
+    assert "legacy==1.0 conflicts with util >=2.0" in labels
+
+
+def test_build_axioms_returns_labels_and_formulas(repo):
+    variables = build_variables(repo)
+    axioms = build_axioms(repo, variables)
+
+    assert axioms
+    assert all(isinstance(label, str) for label, _ in axioms)
+    assert all(isinstance(formula, z3.BoolRef) for _, formula in axioms)
 
 
 def test_add_axioms_at_most_one(repo):
