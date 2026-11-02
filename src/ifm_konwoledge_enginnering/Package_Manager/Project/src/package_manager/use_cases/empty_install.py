@@ -6,6 +6,7 @@ from typing import List, Tuple
 
 import z3
 
+from domain.errors import NoSolutionError
 from package_manager.domain.errors import RequestError
 from package_manager.domain.model import Repository
 from package_manager.domain.versioning import parse_requirement
@@ -59,7 +60,7 @@ def install_empty(
     opt.minimize(expr_other)
 
     if opt.check() != z3.sat:
-        raise RequestError("", "no solution for the given requests")
+        raise NoSolutionError("", "no solution for the given requests")
 
     model = opt.model()
     installed = [
