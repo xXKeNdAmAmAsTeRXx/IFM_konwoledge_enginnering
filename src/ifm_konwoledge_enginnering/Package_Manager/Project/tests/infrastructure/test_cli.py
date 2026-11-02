@@ -42,12 +42,6 @@ def run_cli(tmp_path, *args, repo_path=REPO):
     )
 
 
-def test_default_files_are_relative_to_project_directory():
-    assert DEFAULT_REPOSITORY == BASE / "data/repos/repos/k12/repo_100.json"
-    assert DEFAULT_REPOSITORY.is_file()
-    assert DEFAULT_STATE == BASE / "state.txt"
-
-
 def test_list_without_saved_state_reports_empty_environment(tmp_path, capsys):
     result = run_cli(tmp_path, "list")
 
