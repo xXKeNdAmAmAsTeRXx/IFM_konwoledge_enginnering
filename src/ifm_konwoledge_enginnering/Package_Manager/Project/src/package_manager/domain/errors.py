@@ -21,3 +21,6 @@ class RequestError(PackageError):
 
 class NoSolutionError(PackageError):
     """An error when request does not have a solution."""
+
+class InvalidInitialStateError(PackageError):
+    """An error when initial state is invalid."""

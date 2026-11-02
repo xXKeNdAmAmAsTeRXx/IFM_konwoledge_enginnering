@@ -5,7 +5,19 @@ from __future__ import annotations
 from typing import Dict, Tuple
 
 import z3
-from .model import Repository, Atom, Requirement, Package
+from package_manager.domain.model import Repository, Atom, Requirement
+
+
+def package_version_vars(
+    repo: Repository,
+    variables: Dict[Tuple[str, str], z3.BoolRef],
+    package_name: str,
+) -> list[z3.BoolRef]:
+    """Return Z3 variables for every version of a package in the repository."""
+    return [
+        variables[(package_name, str(version))]
+        for version in repo.versions_of(package_name)
+    ]
 
 
 def build_variables(repo: Repository) -> Dict[Tuple[str, str], z3.BoolRef]:
@@ -48,39 +60,53 @@ def encode_requirement(
     return z3.Or(*alternatives) if alternatives else z3.BoolVal(False)
 
 
-def add_axioms(
-    opt: z3.Optimize,
+def _format_atom(atom: Atom) -> str:
+    """Format a requirement atom without exposing its dataclass representation."""
+    constraints = " ".join(
+        f"{constraint.op}{constraint.version}" for constraint in atom.constraints
+    )
+    return f"{atom.package} {constraints}".rstrip()
+
+
+def _format_requirement(req: Requirement) -> str:
+    """Format an OR requirement in the syntax accepted by the request parser."""
+    return " | ".join(_format_atom(atom) for atom in req.alternatives)
+
+
+def build_axioms(
     repo: Repository,
     variables: Dict[Tuple[str, str], z3.BoolRef],
-) -> list:
+) -> list[tuple[str, z3.ExprRef]]:
     """
-    Mapping dependencies between packages by using three axioms (A1, A2, A3).
-    Returns a list of (label, formula) pairs.
+    Generate repository axioms (A1, A2, A3) without asserting them to a solver.
+
+    Each result is a (human-readable label, formula) pair.
     """
     axioms = []
 
-    #A1: one version per package
+    # A1: one version per package.
     for package in repo.packages.values():
         versions = [variables[(package.name, str(version))] for version in package.versions]
 
         if versions:
-            label = z3.Bool(f"at most one package of {package.name}")
+            label = f"at most one package of {package.name}"
             formula = z3.AtMost(*versions, 1)
-            opt.assert_and_track(formula, label)
-            axioms.append((str(label), formula))
+            axioms.append((label, formula))
 
-    #A2: Dependencies (Imply)
+    # A2: dependencies.
     for package in repo.packages.values():
         for version, info in package.versions.items():
             var = variables[(package.name, str(version))]
             for requirement in info.requires:
                 requirement_encoded = encode_requirement(requirement, repo, variables)
-                label = z3.Bool(f"Package {package.name} requires {requirement}")
+                label = (
+                    f"Package {package.name}=={version} requires "
+                    f"{_format_requirement(requirement)}"
+                )
                 formula = z3.Implies(var, requirement_encoded)
-                opt.assert_and_track(formula, label)
-                axioms.append((str(label), formula))
+                axioms.append((label, formula))
 
-    #A3: Conflicts (Imply)
+    # A3: conflicts.
     for package in repo.packages.values():
         for version, info in package.versions.items():
             var = variables[(package.name, str(version))]
@@ -92,13 +118,25 @@ def add_axioms(
                         if atom.matches_version(v)
                     ]
                     if matching:
-                        label = z3.Bool(
-                            f"{package.name}=={version} conflicts with {atom.package}"
+                        label = (
+                            f"{package.name}=={version} conflicts with "
+                            f"{_format_atom(atom)}"
                         )
                         formula = z3.Implies(var, z3.Not(z3.Or(matching)))
-                        opt.assert_and_track(formula, label)
-                        axioms.append((str(label), formula))
+                        axioms.append((label, formula))
 
+    return axioms
+
+
+def add_axioms(
+    opt: z3.Optimize,
+    repo: Repository,
+    variables: Dict[Tuple[str, str], z3.BoolRef],
+) -> list[tuple[str, z3.ExprRef]]:
+    """Generate and assert repository axioms, tracking each one uniquely."""
+    axioms = build_axioms(repo, variables)
+    for _, formula in axioms:
+        opt.assert_and_track(formula, z3.FreshBool("axiom_track"))
     return axioms
 
 

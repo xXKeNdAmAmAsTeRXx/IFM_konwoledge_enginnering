@@ -2,13 +2,13 @@ from pathlib import Path
 
 import pytest
 
-from package_manager.parsing import load_repository
-from package_manager.install import install
+from package_manager.infrastructure.parsing import load_repository
+from package_manager.use_cases.install import install
 
 
 @pytest.fixture
 def repo():
-    base = Path(__file__).resolve().parent.parent
+    base = Path(__file__).resolve().parents[2]
     return load_repository(base / "examples" / "repo_example.json")
 
 

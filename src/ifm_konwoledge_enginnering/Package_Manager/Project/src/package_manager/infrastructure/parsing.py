@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import json
+import sys
 from typing import List
 
-from .errors import RepoError
-from .model import Package, Repository, VersionInfo
-from .versioning import (
+from package_manager.domain.errors import RepoError
+from package_manager.domain.model import Package, Repository, VersionInfo
+from package_manager.domain.versioning import (
     normalize_package_name,
     parse_version,
     parse_requirement,
@@ -134,18 +135,18 @@ def parse_repository_text(text: str, source: str = "<input>") -> Repository:
 
 
 def validate_repository(repo: Repository) -> list:
-    """Print and return warnings for requirements that match no version."""
-    warnings = find_unsatisfiable(repo)
-    for path, message in warnings:
-        print(f"WARNING {path}: {message}")
-    return warnings
+    """Return warnings for requirements that match no repository version."""
+    return find_unsatisfiable(repo)
 
 
-def load_repository(path: str) -> Repository:
+def load_repository(path: str, *, show_warnings: bool = False) -> Repository:
     with open(path, "r", encoding="utf-8") as fh:
         text = fh.read()
     repo = parse_repository_text(text, source=path)
-    validate_repository(repo)
+    warnings = validate_repository(repo)
+    if show_warnings:
+        for warning_path, message in warnings:
+            print(f"WARNING {warning_path}: {message}", file=sys.stderr)
     return repo
 
 

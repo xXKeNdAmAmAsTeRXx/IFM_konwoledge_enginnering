@@ -1,8 +1,7 @@
 from typing import Iterable
 
-from .model import Repository
-from .parsing import parse_version
-from .versioning import parse_requirement
+from package_manager.domain.model import Repository
+from package_manager.domain.versioning import parse_requirement, parse_version
 
 
 def verify(repo: Repository, installed: Iterable[tuple[str, str]], requests=None) -> list[str]:

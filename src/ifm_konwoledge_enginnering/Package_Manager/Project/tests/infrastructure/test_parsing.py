@@ -4,13 +4,13 @@ import tempfile
 
 import pytest
 
-from package_manager.errors import RepoError
-from package_manager.parsing import parse_repository_text, load_repository
-from package_manager.versioning import find_unsatisfiable
+from package_manager.domain.errors import RepoError
+from package_manager.infrastructure.parsing import parse_repository_text, load_repository
+from package_manager.domain.versioning import find_unsatisfiable
 
 
 EXAMPLE_REPO = os.path.join(
-    os.path.dirname(__file__), "..", "examples", "repo_example.json"
+    os.path.dirname(__file__), "..", "..", "examples", "repo_example.json"
 )
 
 
@@ -132,6 +132,36 @@ def test_unsatisfiable_warning_detection():
     repo = parse_repository_text(text)
     warnings = find_unsatisfiable(repo)
     assert len(warnings) == 1
+
+
+def test_load_repository_suppresses_warnings_by_default(tmp_path, capsys):
+    repo_path = tmp_path / "repo.json"
+    repo_path.write_text(
+        '{"packages": {"app": {"versions": {"1.0": '
+        '{"requires": ["missingpkg"]}}}}}',
+        encoding="utf-8",
+    )
+
+    load_repository(repo_path)
+
+    captured = capsys.readouterr()
+    assert "WARNING" not in captured.out
+    assert "WARNING" not in captured.err
+
+
+def test_load_repository_can_show_warnings(tmp_path, capsys):
+    repo_path = tmp_path / "repo.json"
+    repo_path.write_text(
+        '{"packages": {"app": {"versions": {"1.0": '
+        '{"requires": ["missingpkg"]}}}}}',
+        encoding="utf-8",
+    )
+
+    load_repository(repo_path, show_warnings=True)
+
+    captured = capsys.readouterr()
+    assert "WARNING Package app=1.0" in captured.err
+    assert not captured.out
 
 
 def test_repo_versions_sorted_descending():

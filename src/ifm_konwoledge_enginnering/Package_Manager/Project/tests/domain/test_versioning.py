@@ -1,11 +1,11 @@
 import pytest
 
-from package_manager.versioning import (
+from package_manager.domain.versioning import (
     normalize_package_name,
     parse_version,
     parse_requirement,
 )
-from package_manager.model import Constraint
+from package_manager.domain.model import Constraint
 
 
 def test_normalize_package_name_equivalence():
@@ -87,28 +87,28 @@ def test_parse_requirement_no_spaces():
 
 
 def test_parse_requirement_invalid_operator():
-    from package_manager.errors import RepoError
+    from package_manager.domain.errors import RepoError
 
     with pytest.raises(RepoError):
         parse_requirement("lib ~= 2.0")
 
 
 def test_parse_requirement_invalid_version():
-    from package_manager.errors import RepoError
+    from package_manager.domain.errors import RepoError
 
     with pytest.raises(RepoError):
         parse_requirement("lib >= not-a-version")
 
 
 def test_parse_requirement_empty_alternative():
-    from package_manager.errors import RepoError
+    from package_manager.domain.errors import RepoError
 
     with pytest.raises(RepoError):
         parse_requirement("lib | ")
 
 
 def test_parse_requirement_invalid_name():
-    from package_manager.errors import RepoError
+    from package_manager.domain.errors import RepoError
 
     with pytest.raises(RepoError):
         parse_requirement("bad?name")

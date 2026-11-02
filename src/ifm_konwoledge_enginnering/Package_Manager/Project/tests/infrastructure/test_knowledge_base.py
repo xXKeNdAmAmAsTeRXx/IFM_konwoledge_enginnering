@@ -3,13 +3,14 @@ from pathlib import Path
 import z3
 import pytest
 
-from package_manager.parsing import load_repository
-from package_manager.versioning import parse_requirement
-from package_manager.kb import (
+from package_manager.infrastructure.parsing import load_repository
+from package_manager.domain.versioning import parse_requirement
+from package_manager.infrastructure.solver.knowledge_base import (
     build_variables,
     encode_constraint,
     encode_requirement,
     add_axioms,
+    build_axioms,
     build_knowledge_base,
     print_example_axioms,
 )
@@ -17,7 +18,7 @@ from package_manager.kb import (
 
 @pytest.fixture
 def repo():
-    base = Path(__file__).resolve().parent.parent
+    base = Path(__file__).resolve().parents[2]
     return load_repository(base / "examples" / "repo_example.json")
 
 
@@ -103,6 +104,26 @@ def test_encode_requirement_alternatives(repo):
     assert solver.check() == z3.sat
 
 
+def test_build_axioms_labels_include_source_version(repo):
+    variables = build_variables(repo)
+    axioms = build_axioms(repo, variables)
+    labels = [label for label, _ in axioms]
+
+    assert "Package app==2.0 requires lib >=2.0" in labels
+    assert "Package tool==1.0 requires lib <2.0" in labels
+    assert "Package tool==1.1 requires lib <2.0" in labels
+    assert "legacy==1.0 conflicts with util >=2.0" in labels
+
+
+def test_build_axioms_returns_labels_and_formulas(repo):
+    variables = build_variables(repo)
+    axioms = build_axioms(repo, variables)
+
+    assert axioms
+    assert all(isinstance(label, str) for label, _ in axioms)
+    assert all(isinstance(formula, z3.BoolRef) for _, formula in axioms)
+
+
 def test_add_axioms_at_most_one(repo):
     variables, opt, axioms = build_knowledge_base(repo)
     lib_versions = [variables[("lib", str(v))] for v in repo.packages["lib"].versions]
@@ -149,7 +170,7 @@ def test_build_knowledge_base_sat(repo):
 
 
 def test_print_example_axioms(capsys):
-    repo = load_repository(str(Path(__file__).resolve().parent.parent / "examples" / "repo_example.json"))
+    repo = load_repository(str(Path(__file__).resolve().parents[2] / "examples" / "repo_example.json"))
     variables, opt, axioms = build_knowledge_base(repo)
     print_example_axioms(axioms, limit=2)
     captured = capsys.readouterr()
@@ -158,7 +179,7 @@ def test_print_example_axioms(capsys):
 
 
 def test_build_knowledge_base_print_flag(capsys):
-    repo = load_repository(str(Path(__file__).resolve().parent.parent / "examples" / "repo_example.json"))
+    repo = load_repository(str(Path(__file__).resolve().parents[2] / "examples" / "repo_example.json"))
     variables, opt, axioms = build_knowledge_base(repo, print_axioms=True)
     captured = capsys.readouterr()
     assert len(captured.out.strip().splitlines()) > 0
