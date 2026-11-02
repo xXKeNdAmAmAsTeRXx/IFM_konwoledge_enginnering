@@ -6,7 +6,7 @@ from typing import List, Tuple
 
 import z3
 
-from domain.errors import NoSolutionError
+from package_manager.domain.errors import NoSolutionError
 from package_manager.domain.errors import RequestError
 from package_manager.domain.model import Repository
 from package_manager.domain.versioning import parse_requirement

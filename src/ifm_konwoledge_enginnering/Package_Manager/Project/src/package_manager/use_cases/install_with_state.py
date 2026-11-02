@@ -3,7 +3,7 @@ from typing import List
 
 import z3
 
-from domain.errors import NoSolutionError
+from package_manager.domain.errors import NoSolutionError
 from package_manager.domain.errors import InvalidInitialStateError
 from package_manager.domain.errors import RequestError
 from package_manager.domain.model import Repository, State
