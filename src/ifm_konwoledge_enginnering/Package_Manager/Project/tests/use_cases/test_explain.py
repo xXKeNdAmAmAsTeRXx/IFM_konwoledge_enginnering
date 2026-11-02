@@ -6,9 +6,6 @@ from package_manager.infrastructure.parsing import load_repository
 from package_manager.use_cases.explain import explain
 
 
-pytestmark = pytest.mark.skip(reason="Task 6 explanation behavior is not implemented yet")
-
-
 @pytest.fixture
 def repo():
     project_root = Path(__file__).resolve().parents[2]
@@ -20,3 +17,9 @@ def test_explain_unsatisfiable_requests(repo):
 
     assert result
     assert all(isinstance(item, str) for item in result)
+    assert any("app==2.0" in item for item in result)
+    assert any("tool" in item for item in result)
+
+
+def test_explain_satisfiable_requests(repo):
+    assert explain(repo, ["app"]) == []

@@ -134,6 +134,36 @@ def test_unsatisfiable_warning_detection():
     assert len(warnings) == 1
 
 
+def test_load_repository_suppresses_warnings_by_default(tmp_path, capsys):
+    repo_path = tmp_path / "repo.json"
+    repo_path.write_text(
+        '{"packages": {"app": {"versions": {"1.0": '
+        '{"requires": ["missingpkg"]}}}}}',
+        encoding="utf-8",
+    )
+
+    load_repository(repo_path)
+
+    captured = capsys.readouterr()
+    assert "WARNING" not in captured.out
+    assert "WARNING" not in captured.err
+
+
+def test_load_repository_can_show_warnings(tmp_path, capsys):
+    repo_path = tmp_path / "repo.json"
+    repo_path.write_text(
+        '{"packages": {"app": {"versions": {"1.0": '
+        '{"requires": ["missingpkg"]}}}}}',
+        encoding="utf-8",
+    )
+
+    load_repository(repo_path, show_warnings=True)
+
+    captured = capsys.readouterr()
+    assert "WARNING Package app=1.0" in captured.err
+    assert not captured.out
+
+
 def test_repo_versions_sorted_descending():
     repo = load_repository(EXAMPLE_REPO)
     lib_versions = repo.versions_of("lib")
