@@ -27,6 +27,9 @@ from package_manager.use_cases.explain import explain
 from package_manager.use_cases.install import install
 from package_manager.use_cases.remove import remove
 
+from package_manager.use_cases.install_with_state import build_change_plan
+from package_manager.use_cases.update import analyze_update, update
+
 
 PROJECT_DIR = Path(__file__).resolve().parents[3]
 DEFAULT_REPOSITORY = PROJECT_DIR / "data/repos/repos/k12/repo_100.json"
@@ -187,6 +190,51 @@ def _run_list(
     _print_state(state)
     return 0
 
+def _read_package_names(path: str) -> list[str]:
+    """One package name per line; '#' starts a comment."""
+    text = Path(path).read_text(encoding="utf-8")
+    names = []
+    for lineno, raw in enumerate(text.splitlines(), start=1):
+        line = raw.split("#", 1)[0].strip()
+        if not line:
+            continue
+        try:
+            names.append(normalize_package_name(line))
+        except ValueError as exc:
+            raise RequestError(f"{path}:{lineno}", str(exc)) from exc
+    return names
+
+
+def _run_update(args: argparse.Namespace, repo_path: Path, state_path: Path) -> int:
+    repo = load_repository(repo_path, show_warnings=args.show_warnings)
+    state = _read_state_if_present(state_path) or State()
+    _validate_state(repo, state)
+    names = _read_package_names(args.packages) if args.packages else None
+
+    report = analyze_update(repo, state, names)
+    if report["core"]:
+        print("Conflict: the newest reachable versions cannot be installed together.")
+        print("Newest reachable separately: " + ", ".join(
+            f"{n} {v}" for n, v in sorted(report["best"].items())))
+        print("Reason (minimal unsatisfiable core):")
+        for label in report["core"]:
+            print(f"- {label}")
+        print("Pareto front (incomparable solutions):")
+        for solution in report["front"]:
+            print("- " + ", ".join(f"{n} {v}" for n, v in sorted(solution.items())))
+        print("Applying the best compromise (criteria of Task 8.1).")
+
+    final_state = update(repo, state, names)
+    changes = build_change_plan(state, final_state)
+    if changes:
+        print("Change plan:")
+        for change in changes:
+            print(f"- {change}")
+    else:
+        print("No changes required.")
+    _save_state(state_path, final_state)
+    _print_state(final_state)
+    return 0
 
 def _run_explain(args: argparse.Namespace, repo_path: Path) -> int:
     repo = load_repository(repo_path, show_warnings=args.show_warnings)
@@ -258,6 +306,17 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     _add_warning_option(explain_parser)
 
+    update_parser = subparsers.add_parser(
+        "update", help="Update installed packages to newer versions"
+    )
+
+    update_parser.add_argument(
+        "packages",
+        nargs="?",
+        help="Optional file with package names to update (default: all)",
+    )
+    _add_warning_option(update_parser)
+
     return parser
 
 
@@ -287,6 +346,8 @@ def main(
             return _run_list(args, Path(repo_path), Path(state_path))
         if args.command == "explain":
             return _run_explain(args, Path(repo_path))
+        if args.command == "update":
+            return _run_update(args, Path(repo_path), Path(state_path))
         parser.error(f"unknown command {args.command!r}")
     except PackageError as exc:
         print(str(exc), file=sys.stderr)
