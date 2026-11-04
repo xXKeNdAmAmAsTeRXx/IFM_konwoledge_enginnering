@@ -1,1 +1,8 @@
-/__pycache__
+.venv
+.idea
+data
+__pycache__
+*/__pycache__
+*.zip
+src/ifm_konwoledge_enginnering/Package_Manager/Project/state.txt
+src/ifm_konwoledge_enginnering/Package_Manager/Project/.state.txt.*.tmp
