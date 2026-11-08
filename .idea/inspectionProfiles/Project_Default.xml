@@ -7,6 +7,8 @@
           <option value="matplotlib" />
           <option value="pytest" />
           <option value="seaborn" />
+          <option value="numpy" />
+          <option value="z3-solver" />
         </list>
       </option>
     </inspection_tool>
