@@ -4,8 +4,8 @@ from models.variable import Variable
 
 def parse_variable(name:str, variable_dict:dict[str, Any]) -> Variable:
 
-    if variable_dict.get('state') is None:
-        raise ValueError(f"Missing required field: {name}")
+    if variable_dict.get('states') is None:
+        raise ValueError(f"Missing required field: states")
 
     states = variable_dict["states"]
     if not isinstance(states, List):
