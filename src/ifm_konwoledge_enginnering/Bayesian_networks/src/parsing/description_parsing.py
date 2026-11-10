@@ -3,6 +3,7 @@ from typing import Any, List
 
 from models.graph import GraphData
 from models.variable import Variable
+from parsing.check_for_cycles import check_for_cycles
 
 
 def parse_variable(name:str, variable_dict:dict[str, Any]) -> Variable:
@@ -83,7 +84,13 @@ def description_parser(path: str):
         parsed_variables_dict[name] = parse_variable(name, variable)
 
     # Parsing Edges
+
+    # Check for cycles
+    if check_for_cycles(data["expert_edges"]):
+        raise ValueError("Cycle detected in expert_edges")
+
     expert =  parse_edges_list(data["expert_edges"], parsed_variables_dict)
+
     required = parse_edges_list(data["required_edges"], parsed_variables_dict)
     forbbiden = parse_edges_list(data["forbidden_edges"], parsed_variables_dict)
 

@@ -116,3 +116,22 @@ def test_description_parser_missing_required_field(mock_file):
 def test_description_parser_invalid_field(mock_file):
     with pytest.raises(ValueError, match="Field unknown_extra_field is invalid"):
         description_parser("dummy_path.json")
+
+@patch("builtins.open", new_callable=mock_open, read_data=json.dumps({
+    "variables": {
+        "A": {"state": "present", "states": ["0", "1"]},
+        "B": {"state": "present", "states": ["0", "1"]},
+        "C": {"state": "present", "states": ["0", "1"]}
+    },
+    "expert_edges": [
+        ["A", "B"],
+        ["B", "C"],
+        ["C", "A"]  # Creates a cycle: A -> B -> C -> A
+    ],
+    "required_edges": [],
+    "forbidden_edges": [],
+    "tiers": [["A", "B", "C"]]
+}))
+def test_description_parser_cycle_in_expert_edges(mock_file):
+    with pytest.raises(ValueError, match="Cycle detected in expert_edges"):
+        description_parser("dummy_path.json")
