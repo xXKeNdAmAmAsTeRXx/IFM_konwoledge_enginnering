@@ -37,17 +37,40 @@ def test_description_parser_real_dataset(
 def test_description_parser_przyklad_variable_names():
     graph = description_parser(str(PRZYKLAD / "opis.json"))
 
-    assert [(left.name, right.name) for left, right in graph.exper_edges] == [
+    assert graph.exper_edges == [
         ("D", "G"),
         ("I", "G"),
         ("G", "L"),
         ("I", "S"),
     ]
-    assert [[variable.name for variable in tier] for tier in graph.tiers] == [
-        ["D", "I"],
-        ["G", "S"],
-        ["L"],
+    assert graph.tiers == [["D", "I"], ["G", "S"], ["L"]]
+    assert set(graph.variables_dict) == {"D", "I", "G", "S", "L"}
+
+
+@pytest.mark.parametrize(
+    "description_path, expected_names",
+    [
+        (PRZYKLAD / "opis.json", {"D", "I", "G", "S", "L"}),
+        (K24 / "opis.json", {"D", "I", "W", "Q", "E", "G", "S", "L", "R"}),
+    ],
+    ids=["przyklad", "k24"],
+)
+def test_description_parser_real_dataset_references_defined_variables(
+    description_path, expected_names
+):
+    graph = description_parser(str(description_path))
+
+    assert set(graph.variables_dict) == expected_names
+
+    referenced = [
+        name
+        for edge in (*graph.exper_edges, *graph.required_edges, *graph.forbidden_edges)
+        for name in edge
     ]
+    referenced.extend(name for tier in graph.tiers for name in tier)
+
+    assert referenced
+    assert all(name in graph.variables_dict for name in referenced)
 
 
 @pytest.mark.parametrize(

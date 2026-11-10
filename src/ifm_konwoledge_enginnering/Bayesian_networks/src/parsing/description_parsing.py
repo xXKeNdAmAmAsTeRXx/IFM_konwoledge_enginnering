@@ -1,15 +1,22 @@
 import json
-from typing import Any, List
 import os
+from typing import Any, List
 
 from models.graph import GraphData
 from models.variable import Variable
+from parsing.parse_variable import parse_variables_dict
 from parsing.util.check_for_cycles import check_for_cycles
-from parsing.parse_variable import parse_variable, parse_variables_dict
 
 
-def parse_edge(edge:List[str], variables_dict:dict[str, Variable]) -> tuple[Variable, Variable]:
+def _validate_variable_name(name: Any, context: str, variables_dict: dict[str, Variable]) -> None:
+    if not isinstance(name, str) or not name:
+        raise ValueError(f"Invalid variable name in {context}: {name!r}")
 
+    if name not in variables_dict:
+        raise ValueError(f"{context} references unknown variable: {name}")
+
+
+def parse_edge(edge: List[str], variables_dict: dict[str, Variable]) -> tuple[str, str]:
     if not isinstance(edge, list):
         raise ValueError(f"Invalid edge format: {edge}")
 
@@ -17,39 +24,55 @@ def parse_edge(edge:List[str], variables_dict:dict[str, Variable]) -> tuple[Vari
         raise ValueError(f"Invalid edge: {edge}")
 
     for name in edge:
-        if name not in variables_dict.keys():
-            raise ValueError(f"Edge {edge} is not a variable")
+        _validate_variable_name(name, f"edge {edge}", variables_dict)
 
-    return variables_dict[edge[0]], variables_dict[edge[1]]
+    return (edge[0], edge[1])
 
-def parse_edges_list(edges_list:List[List[str]], variables_dict:dict[str, Variable]) -> list[tuple[Variable, Variable]]:
+
+def parse_edges_list(
+    edges_list: List[List[str]], variables_dict: dict[str, Variable]
+) -> list[tuple[str, str]]:
     if not isinstance(edges_list, list):
         raise ValueError(f"Invalid edges format: {edges_list}")
 
-    edges = []
-    for edge in edges_list:
-        edges.append(parse_edge(edge, variables_dict))
+    return [parse_edge(edge, variables_dict) for edge in edges_list]
 
-    return edges
 
-def parse_tiers(tiers_list:List[List[str]], variables_dict:dict[str, Variable]) -> list[List[Variable]]:
-
+def parse_tiers(
+    tiers_list: List[List[str]], variables_dict: dict[str, Variable]
+) -> list[List[str]]:
     if not isinstance(tiers_list, list):
         raise ValueError(f"Invalid tiers format: {tiers_list}")
 
     tiers = []
     for names in tiers_list:
+        if not isinstance(names, list):
+            raise ValueError(f"Invalid tier format: {names}")
+
         tier = []
         for name in names:
-            if name not in variables_dict.keys():
-                raise ValueError(f"Tier {name} is not a variable")
-            tier.append(variables_dict[name])
+            _validate_variable_name(name, f"tier {names}", variables_dict)
+            tier.append(name)
 
         tiers.append(tier)
 
     return tiers
 
-def description_parser(path: str):
+
+def _validate_graph_references(graph: GraphData) -> None:
+    referenced = [
+        name
+        for edge in (*graph.exper_edges, *graph.required_edges, *graph.forbidden_edges)
+        for name in edge
+    ]
+    referenced.extend(name for tier in graph.tiers for name in tier)
+
+    unknown = sorted({name for name in referenced if name not in graph.variables_dict})
+    if unknown:
+        raise ValueError(f"Graph references unknown variable(s): {', '.join(unknown)}")
+
+
+def description_parser(path: str) -> GraphData:
     if not os.path.isfile(path):
         raise FileNotFoundError(f"Invalid path: {path}")
 
@@ -61,13 +84,11 @@ def description_parser(path: str):
             data = json.loads(json_data)
         except json.decoder.JSONDecodeError as e:
             raise ValueError(f"Invalid JSON: {e}")
-    elif isinstance(json_data, dict):
-        try:
-            data = json_data
-        except json.decoder.JSONDecodeError as e:
-            raise ValueError(f"Invalid JSON: {e}")
     else:
-        raise ValueError(f"Invalid JSON: {json_data}")
+        data = json_data
+
+    if not isinstance(data, dict):
+        raise ValueError(f"Invalid JSON: {data}")
 
     # Check Required fields
     required_fields = ["variables", "expert_edges", "required_edges", "forbidden_edges", "tiers"]
@@ -81,25 +102,26 @@ def description_parser(path: str):
         if key not in possible_fields:
             raise ValueError(f"Field {key} is invalid")
 
-    parsed_variables_dict = parse_variables_dict(data['variables'])
+    parsed_variables_dict = parse_variables_dict(data["variables"])
 
-    # Parsing Edges
-    # Check for cycles
-
-    expert =  parse_edges_list(data["expert_edges"], parsed_variables_dict)
+    # Parsing Edges and Tiers into variable names
+    expert = parse_edges_list(data["expert_edges"], parsed_variables_dict)
     required = parse_edges_list(data["required_edges"], parsed_variables_dict)
     forbidden = parse_edges_list(data["forbidden_edges"], parsed_variables_dict)
 
-    if check_for_cycles(data["expert_edges"]):
+    # Check for cycles (expert edges only)
+    if check_for_cycles(expert):
         raise ValueError("Cycle detected in expert_edges")
 
     tiers = parse_tiers(data["tiers"], parsed_variables_dict)
 
-    return GraphData(
+    graph = GraphData(
+        variables_dict=parsed_variables_dict,
         exper_edges=expert,
         required_edges=required,
         forbidden_edges=forbidden,
-        tiers=tiers
+        tiers=tiers,
     )
+    _validate_graph_references(graph)
 
-
+    return graph

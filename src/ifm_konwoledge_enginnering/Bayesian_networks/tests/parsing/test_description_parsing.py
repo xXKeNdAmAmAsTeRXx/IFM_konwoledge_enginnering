@@ -24,18 +24,11 @@ def _write_text(path: Path, content: str) -> str:
     return str(path)
 
 
-def _edge_names(edges):
-    return [(left.name, right.name) for left, right in edges]
-
-
 # parse_edge
 
 
 def test_parse_edge_valid(variables_dict):
-    left, right = parse_edge(["A", "B"], variables_dict)
-
-    assert left is variables_dict["A"]
-    assert right is variables_dict["B"]
+    assert parse_edge(["A", "B"], variables_dict) == ("A", "B")
 
 
 @pytest.mark.parametrize("edge", [[], ["A"], ["A", "B", "C"]])
@@ -64,9 +57,17 @@ def test_parse_edge_non_list_input(edge, variables_dict):
 
 
 def test_parse_edge_accepts_self_edge(variables_dict):
-    left, right = parse_edge(["A", "A"], variables_dict)
+    assert parse_edge(["A", "A"], variables_dict) == ("A", "A")
 
-    assert left is right is variables_dict["A"]
+
+@pytest.mark.parametrize(
+    "edge",
+    [["A", ["B"]], [["A"], "B"], ["", "B"]],
+    ids=["right-list", "left-list", "empty-name"],
+)
+def test_parse_edge_rejects_non_string_name(edge, variables_dict):
+    with pytest.raises(ValueError):
+        parse_edge(edge, variables_dict)
 
 
 def test_parse_edge_does_not_mutate_edge(variables_dict):
@@ -89,9 +90,7 @@ def test_parse_edges_list_valid(variables_dict):
 
     parsed = parse_edges_list(edge_list, variables_dict)
 
-    assert _edge_names(parsed) == [("A", "B"), ("B", "C")]
-    assert parsed[0][0] is variables_dict["A"]
-    assert parsed[1][0] is variables_dict["B"]
+    assert parsed == [("A", "B"), ("B", "C")]
 
 
 def test_parse_edges_list_returns_new_list(variables_dict):
@@ -132,9 +131,7 @@ def test_parse_tiers_empty(variables_dict):
 def test_parse_tiers_valid(variables_dict):
     tiers = parse_tiers([["A"], ["B", "C"]], variables_dict)
 
-    assert tiers == [[variables_dict["A"]], [variables_dict["B"], variables_dict["C"]]]
-    assert tiers[0][0] is variables_dict["A"]
-    assert tiers[1][1] is variables_dict["C"]
+    assert tiers == [["A"], ["B", "C"]]
 
 
 def test_parse_tiers_accepts_empty_tier(variables_dict):
@@ -144,6 +141,16 @@ def test_parse_tiers_accepts_empty_tier(variables_dict):
 def test_parse_tiers_unknown_variable(variables_dict):
     with pytest.raises(ValueError, match="Z"):
         parse_tiers([["A", "Z"]], variables_dict)
+
+
+@pytest.mark.parametrize(
+    "tiers_list",
+    [[["A", ["B"]]], [[42]], [[""]], ["A"]],
+    ids=["list-name", "non-string-name", "empty-name", "tier-not-list"],
+)
+def test_parse_tiers_rejects_invalid_names_or_shapes(tiers_list, variables_dict):
+    with pytest.raises(ValueError):
+        parse_tiers(tiers_list, variables_dict)
 
 
 def test_parse_tiers_does_not_mutate_input(variables_dict):
@@ -164,10 +171,11 @@ def test_description_parser_valid(tmp_path, valid_description_payload):
     graph = description_parser(path)
 
     assert isinstance(graph, GraphData)
-    assert _edge_names(graph.exper_edges) == [("A", "B"), ("B", "C")]
-    assert _edge_names(graph.required_edges) == [("A", "B")]
-    assert _edge_names(graph.forbidden_edges) == [("C", "A")]
-    assert [[variable.name for variable in tier] for tier in graph.tiers] == [["A"], ["B"], ["C"]]
+    assert graph.exper_edges == [("A", "B"), ("B", "C")]
+    assert graph.required_edges == [("A", "B")]
+    assert graph.forbidden_edges == [("C", "A")]
+    assert graph.tiers == [["A"], ["B"], ["C"]]
+    assert set(graph.variables_dict) == {"A", "B", "C"}
 
 
 def test_description_parser_meta_is_allowed_and_ignored(tmp_path, valid_description_payload):
@@ -329,15 +337,32 @@ def test_description_parser_rejects_unknown_tier_variable(tmp_path, valid_descri
         description_parser(path)
 
 # description_parser: output contract
-def test_description_parser_reuses_variable_objects(tmp_path, valid_description_payload):
+
+
+def test_description_parser_exposes_variables_dict(tmp_path, valid_description_payload):
     path = _write_json(tmp_path / "opis.json", valid_description_payload)
 
     graph = description_parser(path)
 
-    variable_from_edge = graph.exper_edges[0][0]
-    variable_from_tier = graph.tiers[0][0]
-    variable_from_required = graph.required_edges[0][0]
+    assert set(graph.variables_dict) == {"A", "B", "C"}
+    assert all(isinstance(variable, Variable) for variable in graph.variables_dict.values())
+    assert graph.variables_dict["A"].name == "A"
+    assert graph.variables_dict["A"].states == ["a0", "a1"]
 
-    assert variable_from_edge is variable_from_tier
-    assert variable_from_edge is variable_from_required
-    assert isinstance(variable_from_edge, Variable)
+
+def test_description_parser_graph_references_only_defined_variables(
+    tmp_path, valid_description_payload
+):
+    path = _write_json(tmp_path / "opis.json", valid_description_payload)
+
+    graph = description_parser(path)
+
+    referenced = [
+        name
+        for edge in (*graph.exper_edges, *graph.required_edges, *graph.forbidden_edges)
+        for name in edge
+    ]
+    referenced.extend(name for tier in graph.tiers for name in tier)
+
+    assert referenced
+    assert all(name in graph.variables_dict for name in referenced)
