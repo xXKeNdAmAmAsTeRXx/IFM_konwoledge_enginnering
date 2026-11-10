@@ -3,33 +3,9 @@ from typing import Any, List
 
 from models.graph import GraphData
 from models.variable import Variable
-from parsing.check_for_cycles import check_for_cycles
+from parsing.util.check_for_cycles import check_for_cycles
+from parsing.parse_variable import parse_variable
 
-
-def parse_variable(name:str, variable_dict:dict[str, Any]) -> Variable:
-
-    if variable_dict.get('state') is None:
-        raise ValueError(f"Missing required field: {name}")
-
-    states = variable_dict["states"]
-    if not isinstance(states, List):
-        raise ValueError(f"Invalid states: {states}")
-
-    counter : int = 0
-    for state in states:
-        if isinstance(state, str):
-           counter += 1
-        else:
-            raise ValueError(f"Invalid state: {state}")
-
-    if counter < 2:
-        raise ValueError(f"Variables should contain at least two states, Invalid States: {states}")
-
-    return Variable(
-        name=name,
-        description=variable_dict.get('description', "not description provided"),
-        states=variable_dict["states"],
-    )
 
 def parse_edge(edge:List[str], variables_dict:dict[str, Variable]) -> tuple[Variable, Variable]:
     if len(edge) != 2:

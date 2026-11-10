@@ -3,8 +3,8 @@ from unittest.mock import mock_open, patch
 import pytest
 
 from models.variable import Variable
-from parsing.description_parsing import parse_variable, parse_edge, parse_tiers, description_parser
-
+from parsing.description_parsing import parse_edge, parse_tiers, description_parser
+from parsing.parse_variable import parse_variable
 
 def test_parse_variable_valid():
     var_dict = {"state": "present", "states": ["active", "inactive"], "description": "A test variable"}
