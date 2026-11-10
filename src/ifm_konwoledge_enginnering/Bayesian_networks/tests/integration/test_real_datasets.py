@@ -2,7 +2,9 @@ from pathlib import Path
 
 import pytest
 
+from models.data import Data
 from models.graph import GraphData
+from parsing.data_parsing import parse_data
 from parsing.description_parsing import description_parser
 from parsing.query_parsing import query_parser
 
@@ -76,3 +78,69 @@ def test_query_parser_przyklad_query_order(extended_student_variables):
         "D",
     ]
     assert [len(query.variables) for query in queries] == [1, 1, 1, 1, 1, 2, 1, 2]
+
+
+def test_parse_data_k24_training_file(extended_student_variables):
+    data = parse_data(str(K24 / "dane.csv"), extended_student_variables)
+
+    assert isinstance(data, Data)
+    assert len(data.observations) == 3000
+    assert sum(
+        1
+        for observation in data.observations
+        if all(state is not None for state in observation.states.values())
+    ) == 410
+
+    missing = {
+        name: sum(
+            1
+            for observation in data.observations
+            if observation.states[name] is None
+        )
+        for name in extended_student_variables
+    }
+    assert missing == {
+        "D": 472,
+        "I": 1778,
+        "W": 446,
+        "Q": 337,
+        "E": 488,
+        "G": 429,
+        "S": 193,
+        "L": 333,
+        "R": 334,
+    }
+
+
+def test_parse_data_k24_test_file_is_complete(extended_student_variables):
+    data = parse_data(
+        str(K24 / "test.csv"),
+        extended_student_variables,
+        allow_missing=False,
+    )
+
+    assert len(data.observations) == 2000
+    assert all(
+        state is not None
+        for observation in data.observations
+        for state in observation.states.values()
+    )
+
+
+def test_parse_data_przyklad_test_file(student_variables):
+    data = parse_data(
+        str(PRZYKLAD / "test.csv"),
+        student_variables,
+        allow_missing=False,
+    )
+
+    assert len(data.observations) == 2000
+    assert all(
+        set(observation.states) == set(student_variables)
+        for observation in data.observations
+    )
+    assert all(
+        state is not None
+        for observation in data.observations
+        for state in observation.states.values()
+    )
