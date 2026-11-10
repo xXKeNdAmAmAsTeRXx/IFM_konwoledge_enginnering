@@ -48,7 +48,7 @@ def test_parse_variable_preserves_state_order():
 
 
 def test_parse_variable_missing_states_key():
-    with pytest.raises(ValueError, match="var1"):
+    with pytest.raises(ValueError, match="states"):
         parse_variable("var1", {"state": "present", "description": "missing states"})
 
 

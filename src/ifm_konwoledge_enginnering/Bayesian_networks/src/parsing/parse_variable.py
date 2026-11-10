@@ -4,22 +4,26 @@ from models.variable import Variable
 
 def parse_variable(name:str, variable_dict:dict[str, Any]) -> Variable:
 
-    if variable_dict.get('states') is None:
-        raise ValueError(f"Missing required field: states")
+    if 'states' not in variable_dict:
+        raise ValueError(f"Variable {name} is missing states")
+
+    if not isinstance(variable_dict['states'], list):
+        raise ValueError(f"Invalid states: {variable_dict['states']}")
 
     states = variable_dict["states"]
     if not isinstance(states, List):
         raise ValueError(f"Invalid states: {states}")
 
-    counter : int = 0
+    if len(states) < 2:
+        raise ValueError(f"Variables should contain at least two states, Invalid States: {states}")
+
+    state_occurrence = []
     for state in states:
         if isinstance(state, str):
-           counter += 1
+           if state in state_occurrence: raise ValueError(f"State {state} is duplicated")
         else:
             raise ValueError(f"Invalid state: {state}")
-
-    if counter < 2:
-        raise ValueError(f"Variables should contain at least two states, Invalid States: {states}")
+        state_occurrence.append(state)
 
     return Variable(
         name=name,
@@ -30,7 +34,7 @@ def parse_variable(name:str, variable_dict:dict[str, Any]) -> Variable:
 def parse_variables_dict(not_parsed_var_dict:Dict[str, Any]) -> Dict[str, Variable]:
     output = {}
     for name, variable in not_parsed_var_dict.items():
-        output[name] = parse_variable(variable)
+        output[name] = parse_variable(name, variable)
 
     return output
 
