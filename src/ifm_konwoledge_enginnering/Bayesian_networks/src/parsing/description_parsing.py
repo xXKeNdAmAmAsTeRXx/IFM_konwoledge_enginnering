@@ -4,7 +4,7 @@ from typing import Any, List
 from models.graph import GraphData
 from models.variable import Variable
 from parsing.util.check_for_cycles import check_for_cycles
-from parsing.parse_variable import parse_variable
+from parsing.parse_variable import parse_variable, parse_variables_dict
 
 
 def parse_edge(edge:List[str], variables_dict:dict[str, Variable]) -> tuple[Variable, Variable]:
@@ -54,13 +54,9 @@ def description_parser(path: str):
         if key not in possible_fields:
             raise ValueError(f"Field {key} is invalid")
 
-    not_parsed_variables_dict = data["variables"]
-    parsed_variables_dict = {}
-    for name, variable in not_parsed_variables_dict.items():
-        parsed_variables_dict[name] = parse_variable(name, variable)
+    parsed_variables_dict = parse_variables_dict(data['variables'])
 
     # Parsing Edges
-
     # Check for cycles
     if check_for_cycles(data["expert_edges"]):
         raise ValueError("Cycle detected in expert_edges")

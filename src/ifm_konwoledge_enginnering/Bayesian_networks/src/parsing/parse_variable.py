@@ -1,7 +1,6 @@
-from typing import Any, List
+from typing import Any, List, Dict
 
 from models.variable import Variable
-
 
 def parse_variable(name:str, variable_dict:dict[str, Any]) -> Variable:
 
@@ -27,4 +26,11 @@ def parse_variable(name:str, variable_dict:dict[str, Any]) -> Variable:
         description=variable_dict.get('description', "not description provided"),
         states=variable_dict["states"],
     )
+
+def parse_variables_dict(not_parsed_var_dict:Dict[str, Any]) -> Dict[str, Variable]:
+    output = {}
+    for name, variable in not_parsed_var_dict.items():
+        output[name] = parse_variable(variable)
+
+    return output
 
