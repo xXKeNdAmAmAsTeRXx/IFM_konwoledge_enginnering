@@ -9,26 +9,45 @@ def _names(variables):
 
 
 @pytest.mark.parametrize(
-    "line, query_type, target_names, evidence_names",
+    "line, query_type, target_names, expected_evidence",
     [
-        ("P(G)", QueryType.P, ["G"], []),
-        ("P(G, L)", QueryType.P, ["G", "L"], []),
-        ("P(G | S==Good)", QueryType.P, ["G"], ["S"]),
-        ("P(G, L | S==Good, D==Easy)", QueryType.P, ["G", "L"], ["S", "D"]),
-        ("MAP(G)", QueryType.MAP, ["G"], []),
-        ("MAP(G | D==Easy, I==Intelligent)", QueryType.MAP, ["G"], ["D", "I"]),
-        ("MAP(I, D | G==A, S==Good)", QueryType.MAP, ["I", "D"], ["G", "S"]),
+        ("P(G)", QueryType.P, ["G"], {}),
+        ("P(G, L)", QueryType.P, ["G", "L"], {}),
+        ("P(G | S==Good)", QueryType.P, ["G"], {"S": "Good"}),
+        (
+            "P(G, L | S==Good, D==Easy)",
+            QueryType.P,
+            ["G", "L"],
+            {"S": "Good", "D": "Easy"},
+        ),
+        ("MAP(G)", QueryType.MAP, ["G"], {}),
+        (
+            "MAP(G | D==Easy, I==Intelligent)",
+            QueryType.MAP,
+            ["G"],
+            {"D": "Easy", "I": "Intelligent"},
+        ),
+        (
+            "MAP(I, D | G==A, S==Good)",
+            QueryType.MAP,
+            ["I", "D"],
+            {"G": "A", "S": "Good"},
+        ),
     ],
 )
 def test_parse_query_valid(
-    line, query_type, target_names, evidence_names, student_variables
+    line, query_type, target_names, expected_evidence, student_variables
 ):
     query = parse_query(line, student_variables)
 
     assert isinstance(query, Query)
     assert query.query_type == query_type
     assert _names(query.variables) == target_names
-    assert _names(query.evidence) == evidence_names
+    assert query.evidence == expected_evidence
+
+
+def test_query_types_are_distinct():
+    assert QueryType.P is not QueryType.MAP
 
 
 def test_parse_query_tolerates_whitespace(student_variables):
@@ -38,36 +57,31 @@ def test_parse_query_tolerates_whitespace(student_variables):
     )
 
     assert _names(query.variables) == ["G", "L"]
-    assert _names(query.evidence) == ["S", "D"]
+    assert query.evidence == {"S": "Good", "D": "Easy"}
 
 
-def test_parse_query_without_evidence_returns_empty_list(student_variables):
+def test_parse_query_without_evidence_returns_empty_dict(student_variables):
     query = parse_query("P(G)", student_variables)
 
-    assert query.evidence == []
+    assert query.evidence == {}
 
 
-def test_parse_query_evidence_uses_resolved_variable_objects(student_variables):
+def test_parse_query_evidence_uses_validated_names_and_states(student_variables):
     query = parse_query("P(G | S==Good, D==Easy)", student_variables)
 
     assert query.variables == [student_variables["G"]]
-    assert query.evidence == [student_variables["S"], student_variables["D"]]
-    assert query.evidence[0] is student_variables["S"]
-    assert query.evidence[1] is student_variables["D"]
-    assert {variable.name for variable in query.variables}.isdisjoint(
-        {variable.name for variable in query.evidence}
-    )
+    assert query.evidence == {"S": "Good", "D": "Easy"}
+    assert set(query.evidence).issubset(student_variables)
+    assert {variable.name for variable in query.variables}.isdisjoint(query.evidence)
 
 
-def test_query_parser_preserves_evidence_variables(tmp_path, student_variables):
+def test_query_parser_preserves_evidence_assignments(tmp_path, student_variables):
     path = tmp_path / "zapytania.txt"
     path.write_text("P(G | S==Good, D==Easy)\n", encoding="utf-8")
 
     query = query_parser(str(path), student_variables)[0]
 
-    assert query.evidence == [student_variables["S"], student_variables["D"]]
-    assert query.evidence[0] is student_variables["S"]
-    assert query.evidence[1] is student_variables["D"]
+    assert query.evidence == {"S": "Good", "D": "Easy"}
 
 
 @pytest.mark.parametrize(
@@ -156,7 +170,7 @@ def test_query_parser_strips_inline_comments(tmp_path, student_variables):
 
     assert len(queries) == 1
     assert _names(queries[0].variables) == ["G"]
-    assert queries[0].evidence == []
+    assert queries[0].evidence == {}
 
 
 def test_query_parser_preserves_order(tmp_path, student_variables):
