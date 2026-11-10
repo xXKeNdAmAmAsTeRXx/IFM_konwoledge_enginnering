@@ -2,6 +2,10 @@ from typing import List
 
 def check_for_cycles(edges: List[tuple[str, str]]) -> bool:
     """Detects cycles in a directed graph using DFS recursion stack."""
+
+    if not isinstance(edges, list):
+        raise ValueError(f"Invalid edges: {edges}")
+
     graph = {}
     for u, v in edges:
         graph.setdefault(u, []).append(v)

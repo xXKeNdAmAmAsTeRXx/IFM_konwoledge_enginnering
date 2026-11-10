@@ -32,6 +32,10 @@ def parse_variable(name:str, variable_dict:dict[str, Any]) -> Variable:
     )
 
 def parse_variables_dict(not_parsed_var_dict:Dict[str, Any]) -> Dict[str, Variable]:
+
+    if not isinstance(not_parsed_var_dict, dict):
+        raise ValueError(f"Invalid variables: {not_parsed_var_dict}")
+
     output = {}
     for name, variable in not_parsed_var_dict.items():
         output[name] = parse_variable(name, variable)
