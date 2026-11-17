@@ -19,9 +19,7 @@ class BayesianNetwork:
         network = DiscreteBayesianNetwork(graph.exper_edges)
 
         cdp_list = []
-        #TODO: CPD list with uniform distribution (needs to be based on expert graph)
-        #Idea 1: Go trough expert graph edges and map parents-children
-        #Idea 2: Use Tiers and search parents with assumptions
+        #TODO: CPD list with uniform distribution (needs to be based on expert graph) - use pgmpy function
 
         raise NotImplementedError
 
