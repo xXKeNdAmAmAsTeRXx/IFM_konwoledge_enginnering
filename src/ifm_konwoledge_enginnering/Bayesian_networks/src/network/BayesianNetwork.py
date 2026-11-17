@@ -1,11 +1,11 @@
-from typing import Dict, List
+from typing import List
 from pgmpy.models import DiscreteBayesianNetwork
 from pgmpy.factors.discrete import TabularCPD
 from pgmpy.parameter_estimator import DiscreteMLE
 
 from models.data import Data
 from models.graph import GraphData
-from models.variable import Variable
+from models.queries import Query
 
 
 class BayesianNetwork:
@@ -21,3 +21,7 @@ class BayesianNetwork:
         cpds = mle.parameters_
 
         self.__init__(network, cpds)
+
+    def answer_question(self, query: Query):
+        #TODO: implement query answear
+        pass
