@@ -76,8 +76,11 @@ def description_parser(path: str) -> GraphData:
     if not os.path.isfile(path):
         raise FileNotFoundError(f"Invalid path: {path}")
 
-    with open(path, "r") as f:
-        json_data = json.load(f)
+    with open(path, "r", encoding="utf-8") as f:
+        try:
+            json_data = json.load(f)
+        except json.decoder.JSONDecodeError as e:
+            raise ValueError(f"Invalid JSON: {e}")
 
     if isinstance(json_data, str):
         try:

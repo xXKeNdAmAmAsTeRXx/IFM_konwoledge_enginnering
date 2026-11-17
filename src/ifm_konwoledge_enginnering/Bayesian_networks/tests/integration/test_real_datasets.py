@@ -104,24 +104,13 @@ def test_query_parser_przyklad_query_order(extended_student_variables):
 
 
 def test_parse_data_k24_training_file(extended_student_variables):
-    data = parse_data(str(K24 / "dane.csv"), extended_student_variables)
+    data = parse_data(str(K24 / "dane.csv"), extended_student_variables, is_train_data=True)
 
     assert isinstance(data, Data)
-    assert len(data.observations) == 3000
-    assert sum(
-        1
-        for observation in data.observations
-        if all(state is not None for state in observation.states.values())
-    ) == 410
+    assert len(data.data_frame) == 3000
+    assert data.data_frame.notna().all(axis=1).sum() == 410
 
-    missing = {
-        name: sum(
-            1
-            for observation in data.observations
-            if observation.states[name] is None
-        )
-        for name in extended_student_variables
-    }
+    missing = data.data_frame.isna().sum().to_dict()
     assert missing == {
         "D": 472,
         "I": 1778,
@@ -139,31 +128,22 @@ def test_parse_data_k24_test_file_is_complete(extended_student_variables):
     data = parse_data(
         str(K24 / "test.csv"),
         extended_student_variables,
+        is_train_data=False,
         allow_missing=False,
     )
 
-    assert len(data.observations) == 2000
-    assert all(
-        state is not None
-        for observation in data.observations
-        for state in observation.states.values()
-    )
+    assert len(data.data_frame) == 2000
+    assert data.data_frame.isna().sum().sum() == 0
 
 
 def test_parse_data_przyklad_test_file(student_variables):
     data = parse_data(
         str(PRZYKLAD / "test.csv"),
         student_variables,
+        is_train_data=False,
         allow_missing=False,
     )
 
-    assert len(data.observations) == 2000
-    assert all(
-        set(observation.states) == set(student_variables)
-        for observation in data.observations
-    )
-    assert all(
-        state is not None
-        for observation in data.observations
-        for state in observation.states.values()
-    )
+    assert len(data.data_frame) == 2000
+    assert set(data.data_frame.columns) == set(student_variables)
+    assert data.data_frame.isna().sum().sum() == 0

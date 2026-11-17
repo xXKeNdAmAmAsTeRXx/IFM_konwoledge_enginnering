@@ -213,8 +213,20 @@ def test_description_parser_unknown_top_level_field(tmp_path, valid_description_
 def test_description_parser_malformed_json(tmp_path):
     path = _write_text(tmp_path / "opis.json", '{ "variables": ')
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Invalid JSON"):
         description_parser(path)
+
+
+def test_description_parser_reads_polish_text_from_file(tmp_path, valid_description_payload):
+    payload = copy.deepcopy(valid_description_payload)
+    payload["variables"]["A"]["description"] = "trudność kursu"
+    payload["variables"]["B"]["states"] = ["żółty", "łódź"]
+    path = _write_json(tmp_path / "opis.json", payload)
+
+    graph = description_parser(path)
+
+    assert graph.variables_dict["A"].description == "trudność kursu"
+    assert graph.variables_dict["B"].states == ["żółty", "łódź"]
 
 
 def test_description_parser_empty_file(tmp_path):

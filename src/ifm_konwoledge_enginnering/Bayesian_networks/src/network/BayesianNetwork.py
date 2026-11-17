@@ -1,6 +1,7 @@
 from typing import Dict, List
 from pgmpy.models import DiscreteBayesianNetwork
 from pgmpy.factors.discrete import TabularCPD
+from pgmpy.parameter_estimator import DiscreteMLE
 
 from models.data import Data
 from models.graph import GraphData
@@ -13,18 +14,10 @@ class BayesianNetwork:
         self.network = network.add_cpds(*cdps)
 
     @classmethod
-    def build_from_expert_graph(self, graph: GraphData):
-        #TODO: Build a network from expert graph with uniform distribution
-
+    def build_from_expert_graph(self, graph: GraphData, training_data: List[Data]):
         network = DiscreteBayesianNetwork(graph.exper_edges)
 
-        cdp_list = []
-        #TODO: CPD list with uniform distribution (needs to be based on expert graph) - use pgmpy function
+        mle = DiscreteMLE().fit(network, training_data)
+        cpds = mle.parameters_
 
-        raise NotImplementedError
-
-        self.__init__(network, cdp_list)
-
-    def estimate_cdps(self, data: Data) -> None:
-        #TODO: estimate and update cdps
-        pass
+        self.__init__(network, cpds)

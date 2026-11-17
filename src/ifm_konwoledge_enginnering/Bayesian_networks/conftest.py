@@ -46,6 +46,16 @@ def extended_student_variables():
 
 
 @pytest.fixture
+def write_csv(tmp_path):
+    def _write(content, name="data.csv"):
+        path = tmp_path / name
+        path.write_bytes(content.encode("utf-8"))
+        return str(path)
+
+    return _write
+
+
+@pytest.fixture
 def valid_description_payload():
     return {
         "meta": {"description": "valid test description"},
