@@ -12,6 +12,7 @@ class BayesianNetwork:
 
     def __init__(self, network: DiscreteBayesianNetwork, cdps: List[TabularCPD]):
         self.network = network.add_cpds(*cdps)
+        self.cdps = cdps
 
     @classmethod
     def build_from_expert_graph(self, graph: GraphData, training_data: List[Data]):
@@ -21,6 +22,10 @@ class BayesianNetwork:
         cpds = mle.parameters_
 
         self.__init__(network, cpds)
+
+    def get_biggest_cdp(self):
+        # TODO: Get biggest cdp and count paranets/rows
+        pass
 
     def answer_question(self, query: Query):
         #TODO: implement query answear
