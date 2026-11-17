@@ -10,4 +10,4 @@ class DataPurpose(Enum):
 @dataclass
 class Data:
      data_purpose: DataPurpose
-     DataFrame: pd.DataFrame
+     data_frame: pd.DataFrame
