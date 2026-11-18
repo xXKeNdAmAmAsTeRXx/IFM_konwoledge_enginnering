@@ -2,11 +2,11 @@ from typing import List
 from pgmpy.models import DiscreteBayesianNetwork
 from pgmpy.factors.discrete import TabularCPD
 from pgmpy.parameter_estimator import DiscreteMLE
-from itertools import product
+from pgmpy.inference import VariableElimination
 
 from models.data import Data
 from models.graph import GraphData
-from models.queries import Query
+from models.queries import Query, QueryType
 
 
 class BayesianNetwork:
@@ -14,6 +14,9 @@ class BayesianNetwork:
     def __init__(self, network: DiscreteBayesianNetwork, cdps: List[TabularCPD]):
         self.network = network.add_cpds(*cdps)
         self.cdps = cdps
+
+    def get_model(self):
+        return self.network
 
     @classmethod
     def build_from_expert_graph(self, graph: GraphData, training_data: List[Data]):
@@ -31,5 +34,15 @@ class BayesianNetwork:
         return biggest_cdp
 
     def answer_question(self, query: Query):
-        #TODO: implement query answear
-        pass
+        network_infer = VariableElimination(self.network)
+
+        variable = query.variables
+        evidence = query.evidence
+
+        if query.query_type == QueryType.P:
+            answers = network_infer.query(variable, evidence, show_progress=False)
+        else:
+            answers = network_infer.map_query(variable, evidence, show_progress=False)
+
+        return answers
+
