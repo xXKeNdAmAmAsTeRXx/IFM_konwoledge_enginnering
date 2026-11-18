@@ -4,10 +4,6 @@ from BayesianNetwork.models.queries import Query, QueryType
 from BayesianNetwork.parsing.query_parsing import parse_query, query_parser
 
 
-def _names(variables):
-    return [variable.name for variable in variables]
-
-
 @pytest.mark.parametrize(
     "line, query_type, target_names, expected_evidence",
     [
@@ -42,7 +38,7 @@ def test_parse_query_valid(
 
     assert isinstance(query, Query)
     assert query.query_type == query_type
-    assert _names(query.variables) == target_names
+    assert query.variables == target_names
     assert query.evidence == expected_evidence
 
 
@@ -56,7 +52,7 @@ def test_parse_query_tolerates_whitespace(student_variables):
         student_variables,
     )
 
-    assert _names(query.variables) == ["G", "L"]
+    assert query.variables == ["G", "L"]
     assert query.evidence == {"S": "Good", "D": "Easy"}
 
 
@@ -69,10 +65,10 @@ def test_parse_query_without_evidence_returns_empty_dict(student_variables):
 def test_parse_query_evidence_uses_validated_names_and_states(student_variables):
     query = parse_query("P(G | S==Good, D==Easy)", student_variables)
 
-    assert query.variables == [student_variables["G"]]
+    assert query.variables == ["G"]
     assert query.evidence == {"S": "Good", "D": "Easy"}
     assert set(query.evidence).issubset(student_variables)
-    assert {variable.name for variable in query.variables}.isdisjoint(query.evidence)
+    assert set(query.variables).isdisjoint(query.evidence)
 
 
 def test_query_parser_preserves_evidence_assignments(tmp_path, student_variables):
@@ -169,7 +165,7 @@ def test_query_parser_strips_inline_comments(tmp_path, student_variables):
     queries = query_parser(str(path), student_variables)
 
     assert len(queries) == 1
-    assert _names(queries[0].variables) == ["G"]
+    assert queries[0].variables == ["G"]
     assert queries[0].evidence == {}
 
 
@@ -179,7 +175,7 @@ def test_query_parser_preserves_order(tmp_path, student_variables):
 
     queries = query_parser(str(path), student_variables)
 
-    assert [_names(query.variables) for query in queries] == [["G"], ["L"], ["G"]]
+    assert [query.variables for query in queries] == [["G"], ["L"], ["G"]]
     assert [query.query_type for query in queries] == [
         QueryType.P,
         QueryType.P,
@@ -221,7 +217,7 @@ def test_query_parser_handles_crlf(tmp_path, student_variables):
     queries = query_parser(str(path), student_variables)
 
     assert len(queries) == 2
-    assert [_names(query.variables) for query in queries] == [["G"], ["L"]]
+    assert [query.variables for query in queries] == [["G"], ["L"]]
 
 
 def test_query_parser_handles_missing_final_newline(tmp_path, student_variables):
@@ -231,7 +227,7 @@ def test_query_parser_handles_missing_final_newline(tmp_path, student_variables)
     queries = query_parser(str(path), student_variables)
 
     assert len(queries) == 1
-    assert _names(queries[0].variables) == ["G"]
+    assert queries[0].variables == ["G"]
 
 
 def test_query_parser_missing_file(tmp_path, student_variables):

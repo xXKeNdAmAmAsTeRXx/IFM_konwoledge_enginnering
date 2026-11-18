@@ -23,12 +23,15 @@ def _resolve_variable(name: str, variables_dict: dict[str, Variable]) -> Variabl
     return variables_dict[name]
 
 
-def _parse_targets(target_line: str, variables_dict: dict[str, Variable]) -> List[Variable]:
+def _parse_targets(target_line: str, variables_dict: dict[str, Variable]) -> List[str]:
     target_names = _split_names(target_line, "query variables")
     if len(set(target_names)) != len(target_names):
         raise ValueError(f"Duplicate query variable: {target_line}")
 
-    return [_resolve_variable(name, variables_dict) for name in target_names]
+    for name in target_names:
+        _resolve_variable(name, variables_dict)
+
+    return target_names
 
 
 def _parse_evidence(
@@ -98,7 +101,7 @@ def parse_query(line: str, variables_dict: dict[str, Variable]) -> Query:
     query_type = QueryType.P if query_type_text == "P" else QueryType.MAP
     variables = _parse_targets(target_line, variables_dict)
 
-    target_names = {variable.name for variable in variables}
+    target_names = set(variables)
     evidence = (
         _parse_evidence(evidence_line, target_names, variables_dict)
         if evidence_line

@@ -2,8 +2,6 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import List, Dict
 
-from .variable import Variable
-
 class QueryType(Enum):
     P = 1
     MAP = 2
@@ -11,5 +9,5 @@ class QueryType(Enum):
 @dataclass
 class Query:
     query_type: QueryType
-    variables: List[Variable]
+    variables: List[str]
     evidence: Dict[str, str]

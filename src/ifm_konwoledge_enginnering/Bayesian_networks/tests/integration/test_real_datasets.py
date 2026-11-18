@@ -90,7 +90,7 @@ def test_query_parser_real_dataset(query_path, expected_count, extended_student_
 def test_query_parser_przyklad_query_order(extended_student_variables):
     queries = query_parser(str(PRZYKLAD / "zapytania.txt"), extended_student_variables)
 
-    assert [query.variables[0].name for query in queries] == [
+    assert [query.variables[0] for query in queries] == [
         "G",
         "G",
         "I",

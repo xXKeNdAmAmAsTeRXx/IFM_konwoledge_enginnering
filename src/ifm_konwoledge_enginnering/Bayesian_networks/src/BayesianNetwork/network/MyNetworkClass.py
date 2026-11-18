@@ -12,24 +12,22 @@ from BayesianNetwork.models.queries import Query, QueryType
 class MyNetworkClass:
 
     def __init__(self, network: DiscreteBayesianNetwork, cdps: List[TabularCPD]):
-        self.network = network.add_cpds(*cdps)
+        self.network = network
+        self.network.add_cpds(*cdps)
         self.cdps = cdps
 
     def get_model(self):
         return self.network
 
     @classmethod
-    def build_from_expert_graph(self, graph: GraphData, training_data: Data):
+    def build_from_expert_graph(cls, graph: GraphData, training_data: Data):
         network = DiscreteBayesianNetwork(graph.exper_edges)
-
-        mle = DiscreteMLE().fit(network, training_data.data_frame)
-        cpds = mle.parameters_
-
-        self.__init__(network, cpds)
+        mle = DiscreteMLE(state_names = {n : v.states for n, v in graph.variables_dict.items()}).fit(network, training_data.data_frame)
+        return cls(network, mle.parameters_)
 
     def get_biggest_cdp(self):
         # Assume that biggest table is the one with the most values
-        biggest_cdp = max(self.cdps, key=lambda x: x.value.shape[0] * x.value.shape[1])
+        biggest_cdp = max(self.cdps, key=lambda x: x.get_values().size)
 
         return biggest_cdp
 
