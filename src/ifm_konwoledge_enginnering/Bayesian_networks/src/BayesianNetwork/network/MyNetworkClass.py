@@ -54,7 +54,7 @@ class MyNetworkClass:
 
         return answers
 
-    def score(self, test_data: Data) -> tuple[List[float], int]:
+    def score(self, test_data: Data) -> tuple[float, List[float], int]:
         """
         This function makes a prediction for each row in given test data.
         Return: mean log of probability that row exist and count of rows that are impossible (zero)
@@ -66,6 +66,7 @@ class MyNetworkClass:
         infer = VariableElimination(model)
 
         log = []
+        P_sum = 0
         zeros_count = 0
         for _, row in df.iterrows():
             obs = {v: row[v] for v  in model.nodes() if pd.notna(row[v])}
@@ -76,5 +77,6 @@ class MyNetworkClass:
                 zeros_count += 1
             else:
                 log.append(np.log(max(p, 10e-10)))
+                P_sum += p
 
-        return sum(log) / len(log), zeros_count
+        return P_sum/len(log), sum(log) / len(log), zeros_count
