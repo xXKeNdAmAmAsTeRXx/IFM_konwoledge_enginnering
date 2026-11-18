@@ -2,6 +2,7 @@ from typing import List
 from pgmpy.models import DiscreteBayesianNetwork
 from pgmpy.factors.discrete import TabularCPD
 from pgmpy.parameter_estimator import DiscreteMLE
+from itertools import product
 
 from models.data import Data
 from models.graph import GraphData
@@ -24,8 +25,10 @@ class BayesianNetwork:
         self.__init__(network, cpds)
 
     def get_biggest_cdp(self):
-        # TODO: Get biggest cdp and count paranets/rows
-        pass
+        # Assume that biggest table is the one with the most values
+        biggest_cdp = max(self.cdps, key=lambda x: x.value.shape[0] * x.value.shape[1])
+
+        return biggest_cdp
 
     def answer_question(self, query: Query):
         #TODO: implement query answear
