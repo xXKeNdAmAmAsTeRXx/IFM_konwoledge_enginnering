@@ -4,9 +4,9 @@ from pgmpy.factors.discrete import TabularCPD
 from pgmpy.parameter_estimator import DiscreteMLE
 from pgmpy.inference import VariableElimination
 
-from models.data import Data
-from models.graph import GraphData
-from models.queries import Query, QueryType
+from BayesianNetwork.models.data import Data
+from BayesianNetwork.models.graph import GraphData
+from BayesianNetwork.models.queries import Query, QueryType
 
 
 class BayesianNetwork:

@@ -4,9 +4,9 @@ from pathlib import Path
 
 import pytest
 
-from models.graph import GraphData
-from models.variable import Variable
-from parsing.description_parsing import (
+from BayesianNetwork.models.graph import GraphData
+from BayesianNetwork.models.variable import Variable
+from BayesianNetwork.parsing.description_parsing import (
     description_parser,
     parse_edge,
     parse_edges_list,

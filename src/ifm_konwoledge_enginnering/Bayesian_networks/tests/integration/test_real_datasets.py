@@ -2,11 +2,11 @@ from pathlib import Path
 
 import pytest
 
-from models.data import Data
-from models.graph import GraphData
-from parsing.data_parsing import parse_data
-from parsing.description_parsing import description_parser
-from parsing.query_parsing import query_parser
+from BayesianNetwork.models.data import Data
+from BayesianNetwork.models.graph import GraphData
+from BayesianNetwork.parsing.data_parsing import parse_data
+from BayesianNetwork.parsing.description_parsing import description_parser
+from BayesianNetwork.parsing.query_parsing import query_parser
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]

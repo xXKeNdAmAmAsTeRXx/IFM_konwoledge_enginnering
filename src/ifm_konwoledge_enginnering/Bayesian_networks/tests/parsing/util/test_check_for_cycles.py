@@ -2,7 +2,7 @@ import copy
 
 import pytest
 
-from parsing.util.check_for_cycles import check_for_cycles
+from BayesianNetwork.parsing.util.check_for_cycles import check_for_cycles
 
 
 @pytest.mark.parametrize(

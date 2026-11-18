@@ -7,7 +7,7 @@ SRC = os.path.join(os.path.dirname(__file__), "src")
 if SRC not in sys.path:
     sys.path.insert(0, SRC)
 
-from models.variable import Variable  # noqa: E402
+from BayesianNetwork.models.variable import Variable  # noqa: E402
 
 
 @pytest.fixture

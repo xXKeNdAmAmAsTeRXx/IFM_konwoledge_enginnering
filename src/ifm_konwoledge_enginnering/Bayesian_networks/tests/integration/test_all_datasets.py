@@ -3,9 +3,9 @@ from pathlib import Path
 
 import pytest
 
-from models.data import DataPurpose
-from parsing.data_parsing import parse_data
-from parsing.description_parsing import description_parser
+from BayesianNetwork.models.data import DataPurpose
+from BayesianNetwork.parsing.data_parsing import parse_data
+from BayesianNetwork.parsing.description_parsing import description_parser
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]

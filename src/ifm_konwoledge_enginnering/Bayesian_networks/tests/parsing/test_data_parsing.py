@@ -3,9 +3,9 @@ import warnings
 import pandas as pd
 import pytest
 
-from models.data import Data, DataPurpose
-from models.variable import Variable
-from parsing.data_parsing import parse_data
+from BayesianNetwork.models.data import Data, DataPurpose
+from BayesianNetwork.models.variable import Variable
+from BayesianNetwork.parsing.data_parsing import parse_data
 
 
 # Happy path

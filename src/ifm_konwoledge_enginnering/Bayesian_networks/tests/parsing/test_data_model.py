@@ -1,6 +1,6 @@
 import dataclasses
 
-from models.data import Data, DataPurpose
+from BayesianNetwork.models.data import Data, DataPurpose
 
 
 def test_data_has_purpose_and_data_frame_fields():

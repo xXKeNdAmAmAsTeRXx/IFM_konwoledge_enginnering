@@ -1,6 +1,6 @@
 from typing import Any, List, Dict
 
-from models.variable import Variable
+from BayesianNetwork.models.variable import Variable
 
 def parse_variable(name:str, variable_dict:dict[str, Any]) -> Variable:
 

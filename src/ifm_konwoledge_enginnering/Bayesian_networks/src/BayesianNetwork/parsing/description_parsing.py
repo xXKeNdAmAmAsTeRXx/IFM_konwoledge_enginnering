@@ -2,10 +2,10 @@ import json
 import os
 from typing import Any, List
 
-from models.graph import GraphData
-from models.variable import Variable
-from parsing.parse_variable import parse_variables_dict
-from parsing.util.check_for_cycles import check_for_cycles
+from BayesianNetwork.models.graph import GraphData
+from BayesianNetwork.models.variable import Variable
+from BayesianNetwork.parsing.parse_variable import parse_variables_dict
+from BayesianNetwork.parsing.util.check_for_cycles import check_for_cycles
 
 
 def _validate_variable_name(name: Any, context: str, variables_dict: dict[str, Variable]) -> None:

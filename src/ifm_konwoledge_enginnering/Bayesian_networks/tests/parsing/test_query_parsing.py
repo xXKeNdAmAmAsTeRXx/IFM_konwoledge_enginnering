@@ -1,7 +1,7 @@
 import pytest
 
-from models.queries import Query, QueryType
-from parsing.query_parsing import parse_query, query_parser
+from BayesianNetwork.models.queries import Query, QueryType
+from BayesianNetwork.parsing.query_parsing import parse_query, query_parser
 
 
 def _names(variables):

@@ -2,8 +2,8 @@ import copy
 
 import pytest
 
-from models.variable import Variable
-from parsing.parse_variable import parse_variable, parse_variables_dict
+from BayesianNetwork.models.variable import Variable
+from BayesianNetwork.parsing.parse_variable import parse_variable, parse_variables_dict
 
 
 def test_parse_variable_valid():

@@ -3,8 +3,8 @@ from typing import Dict
 
 import pandas as pd
 
-from models.data import Data, DataPurpose
-from models.variable import Variable
+from BayesianNetwork.models.data import Data, DataPurpose
+from BayesianNetwork.models.variable import Variable
 
 
 def _validate_columns(data_frame: pd.DataFrame, variables: Dict[str, Variable]) -> None:

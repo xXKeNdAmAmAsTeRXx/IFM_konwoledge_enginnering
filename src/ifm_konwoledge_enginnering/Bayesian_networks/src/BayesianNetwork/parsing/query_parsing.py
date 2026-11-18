@@ -1,8 +1,8 @@
 import re
 from typing import Dict, List
 
-from models.queries import Query, QueryType
-from models.variable import Variable
+from BayesianNetwork.models.queries import Query, QueryType
+from BayesianNetwork.models.variable import Variable
 
 QUERY_PATTERN = re.compile(r"^(P|MAP)\((.*)\)$")
 
