@@ -1,4 +1,7 @@
 from typing import List
+
+import numpy as np
+import pandas as pd
 from pgmpy.models import DiscreteBayesianNetwork
 from pgmpy.factors.discrete import TabularCPD
 from pgmpy.parameter_estimator import DiscreteMLE
@@ -51,3 +54,27 @@ class MyNetworkClass:
 
         return answers
 
+    def score(self, test_data: Data) -> tuple[List[float], int]:
+        """
+        This function makes a prediction for each row in given test data.
+        Return: mean log of probability that row exist and count of rows that are impossible (zero)
+        """
+        assert test_data.data_purpose is DataPurpose.Test, "Do not test model on train data"
+        df = test_data.data_frame
+
+        model = self.network
+        infer = VariableElimination(model)
+
+        log = []
+        zeros_count = 0
+        for _, row in df.iterrows():
+            obs = {v: row[v] for v  in model.nodes() if pd.notna(row[v])}
+            phi = infer.query(obs, joint=True, show_progress=False)
+            p = phi.get_value(**obs)
+
+            if p == 0:
+                zeros_count += 1
+            else:
+                log.append(np.log(max(p, 10e-10)))
+
+        return sum(log) / len(log), zeros_count
