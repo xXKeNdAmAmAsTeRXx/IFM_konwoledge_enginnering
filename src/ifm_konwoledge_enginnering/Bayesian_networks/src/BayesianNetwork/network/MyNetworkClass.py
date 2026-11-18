@@ -9,7 +9,7 @@ from BayesianNetwork.models.graph import GraphData
 from BayesianNetwork.models.queries import Query, QueryType
 
 
-class BayesianNetwork:
+class MyNetworkClass:
 
     def __init__(self, network: DiscreteBayesianNetwork, cdps: List[TabularCPD]):
         self.network = network.add_cpds(*cdps)
@@ -19,10 +19,10 @@ class BayesianNetwork:
         return self.network
 
     @classmethod
-    def build_from_expert_graph(self, graph: GraphData, training_data: List[Data]):
+    def build_from_expert_graph(self, graph: GraphData, training_data: Data):
         network = DiscreteBayesianNetwork(graph.exper_edges)
 
-        mle = DiscreteMLE().fit(network, training_data)
+        mle = DiscreteMLE().fit(network, training_data.data_frame)
         cpds = mle.parameters_
 
         self.__init__(network, cpds)
