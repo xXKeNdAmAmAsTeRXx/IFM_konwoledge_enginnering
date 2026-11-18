@@ -4,7 +4,7 @@ from pgmpy.factors.discrete import TabularCPD
 from pgmpy.parameter_estimator import DiscreteMLE
 from pgmpy.inference import VariableElimination
 
-from BayesianNetwork.models.data import Data
+from BayesianNetwork.models.data import Data, DataPurpose
 from BayesianNetwork.models.graph import GraphData
 from BayesianNetwork.models.queries import Query, QueryType
 
@@ -16,13 +16,20 @@ class MyNetworkClass:
         self.network.add_cpds(*cdps)
         self.cdps = cdps
 
+        if not network.check_model():
+            raise Exception("Model Definition is not correct")
+
     def get_model(self):
         return self.network
 
     @classmethod
     def build_from_expert_graph(cls, graph: GraphData, training_data: Data):
+
+        assert training_data.data_purpose == DataPurpose.Train, "Do not train model on test data"
+
         network = DiscreteBayesianNetwork(graph.exper_edges)
         mle = DiscreteMLE(state_names = {n : v.states for n, v in graph.variables_dict.items()}).fit(network, training_data.data_frame)
+
         return cls(network, mle.parameters_)
 
     def get_biggest_cdp(self):
