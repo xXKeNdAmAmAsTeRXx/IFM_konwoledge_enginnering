@@ -80,3 +80,27 @@ class MyNetworkClass:
                 P_sum += p
 
         return P_sum/len(log), sum(log) / len(log), zeros_count
+
+    def score_on_variable(self, test_data: Data, variable_name:str) -> float:
+        """
+        Network Predicts (via MAP) the given variable name for each row and return accuracy
+        """
+
+        assert test_data.data_purpose is DataPurpose.Test, "Do not test model on train data"
+        df = test_data.data_frame
+
+        model = self.network
+        infer = VariableElimination(model)
+
+        correct_quesses = 0
+        for _, row in df.iterrows():
+            obs = {v: row[v] for v in model.nodes() if pd.notna(row[v])}
+            del obs[variable_name]
+
+            map = infer.map_query([variable_name],evidence = obs, show_progress=False)
+            value = map[variable_name]
+
+            if value == row[variable_name]:
+                correct_quesses += 1
+
+        return correct_quesses/len(df)
