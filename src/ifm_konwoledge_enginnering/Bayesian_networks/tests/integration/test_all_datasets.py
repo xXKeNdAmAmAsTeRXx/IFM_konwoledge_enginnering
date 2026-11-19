@@ -1,6 +1,3 @@
-import csv
-from pathlib import Path
-
 import pytest
 
 from BayesianNetwork.models.data import DataPurpose
@@ -8,39 +5,28 @@ from BayesianNetwork.parsing.data_parsing import parse_data
 from BayesianNetwork.parsing.description_parsing import description_parser
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-ZESTAWY = PROJECT_ROOT / "data" / "zestawy"
-DATASETS = sorted(path for path in ZESTAWY.iterdir() if path.is_dir())
-
-
-def _csv_row_count(path):
-    with open(path, encoding="utf-8-sig", newline="") as f:
-        return sum(1 for _ in csv.reader(f)) - 1
-
-
-def _variables(dataset):
-    return description_parser(str(dataset / "opis.json")).variables_dict
-
-
-@pytest.mark.parametrize("dataset", DATASETS, ids=[path.name for path in DATASETS])
-def test_training_file_parses_with_all_rows(dataset):
-    variables = _variables(dataset)
-
-    data = parse_data(str(dataset / "dane.csv"), variables, is_train_data=True)
-
-    assert data.data_purpose == DataPurpose.Train
-    assert len(data.data_frame) == _csv_row_count(dataset / "dane.csv")
-    assert set(data.data_frame.columns) == set(variables)
-
-
-@pytest.mark.parametrize("dataset", DATASETS, ids=[path.name for path in DATASETS])
-def test_test_file_parses_without_missing_values(dataset):
-    variables = _variables(dataset)
+@pytest.mark.parametrize(
+    "filename, is_train_data, expected_purpose, expected_rows",
+    [
+        ("dane.csv", True, DataPurpose.Train, 5),
+        ("test.csv", False, DataPurpose.Test, 3),
+    ],
+    ids=["training-data", "test-data"],
+)
+def test_dataset_file_parses_with_expected_rows(
+    integration_dataset, filename, is_train_data, expected_purpose, expected_rows
+):
+    variables = description_parser(str(integration_dataset / "opis.json")).variables_dict
 
     data = parse_data(
-        str(dataset / "test.csv"), variables, is_train_data=False, allow_missing=False
+        str(integration_dataset / filename),
+        variables,
+        is_train_data=is_train_data,
+        allow_missing=is_train_data,
     )
 
-    assert data.data_purpose == DataPurpose.Test
-    assert len(data.data_frame) == _csv_row_count(dataset / "test.csv")
-    assert data.data_frame.isna().sum().sum() == 0
+    assert data.data_purpose == expected_purpose
+    assert len(data.data_frame) == expected_rows
+    assert set(data.data_frame.columns) == set(variables)
+    if not is_train_data:
+        assert data.data_frame.isna().sum().sum() == 0

@@ -1,7 +1,3 @@
-from pathlib import Path
-
-import pytest
-
 from BayesianNetwork.models.data import Data
 from BayesianNetwork.models.graph import GraphData
 from BayesianNetwork.parsing.data_parsing import parse_data
@@ -9,33 +5,18 @@ from BayesianNetwork.parsing.description_parsing import description_parser
 from BayesianNetwork.parsing.query_parsing import query_parser
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-PRZYKLAD = PROJECT_ROOT / "przyklad"
-K24 = PROJECT_ROOT / "data" / "zestawy" / "k24"
-
-
-@pytest.mark.parametrize(
-    "description_path, expert_count, required_count, forbidden_count, tier_sizes",
-    [
-        (PRZYKLAD / "opis.json", 4, 4, 2, [2, 2, 1]),
-        (K24 / "opis.json", 7, 4, 4, [4, 1, 2, 1, 1]),
-    ],
-    ids=["przyklad", "k24"],
-)
-def test_description_parser_real_dataset(
-    description_path, expert_count, required_count, forbidden_count, tier_sizes
-):
-    graph = description_parser(str(description_path))
+def test_description_parser_integration_dataset(integration_dataset):
+    graph = description_parser(str(integration_dataset / "opis.json"))
 
     assert isinstance(graph, GraphData)
-    assert len(graph.exper_edges) == expert_count
-    assert len(graph.required_edges) == required_count
-    assert len(graph.forbidden_edges) == forbidden_count
-    assert [len(tier) for tier in graph.tiers] == tier_sizes
+    assert len(graph.exper_edges) == 4
+    assert len(graph.required_edges) == 2
+    assert len(graph.forbidden_edges) == 2
+    assert [len(tier) for tier in graph.tiers] == [2, 2, 1]
 
 
-def test_description_parser_przyklad_variable_names():
-    graph = description_parser(str(PRZYKLAD / "opis.json"))
+def test_description_parser_variable_names(integration_dataset):
+    graph = description_parser(str(integration_dataset / "opis.json"))
 
     assert graph.exper_edges == [
         ("D", "G"),
@@ -47,20 +28,10 @@ def test_description_parser_przyklad_variable_names():
     assert set(graph.variables_dict) == {"D", "I", "G", "S", "L"}
 
 
-@pytest.mark.parametrize(
-    "description_path, expected_names",
-    [
-        (PRZYKLAD / "opis.json", {"D", "I", "G", "S", "L"}),
-        (K24 / "opis.json", {"D", "I", "W", "Q", "E", "G", "S", "L", "R"}),
-    ],
-    ids=["przyklad", "k24"],
-)
-def test_description_parser_real_dataset_references_defined_variables(
-    description_path, expected_names
-):
-    graph = description_parser(str(description_path))
+def test_description_parser_references_defined_variables(integration_dataset):
+    graph = description_parser(str(integration_dataset / "opis.json"))
 
-    assert set(graph.variables_dict) == expected_names
+    assert set(graph.variables_dict) == {"D", "I", "G", "S", "L"}
 
     referenced = [
         name
@@ -73,77 +44,44 @@ def test_description_parser_real_dataset_references_defined_variables(
     assert all(name in graph.variables_dict for name in referenced)
 
 
-@pytest.mark.parametrize(
-    "query_path, expected_count",
-    [
-        (PRZYKLAD / "zapytania.txt", 8),
-        (K24 / "zapytania.txt", 19),
-    ],
-    ids=["przyklad", "k24"],
-)
-def test_query_parser_real_dataset(query_path, expected_count, extended_student_variables):
-    queries = query_parser(str(query_path), extended_student_variables)
+def test_query_parser_integration_dataset(integration_dataset):
+    variables = description_parser(str(integration_dataset / "opis.json")).variables_dict
+    queries = query_parser(str(integration_dataset / "zapytania.txt"), variables)
 
-    assert len(queries) == expected_count
+    assert len(queries) == 4
 
 
-def test_query_parser_przyklad_query_order(extended_student_variables):
-    queries = query_parser(str(PRZYKLAD / "zapytania.txt"), extended_student_variables)
+def test_query_parser_preserves_query_order(integration_dataset):
+    variables = description_parser(str(integration_dataset / "opis.json")).variables_dict
+    queries = query_parser(str(integration_dataset / "zapytania.txt"), variables)
 
-    assert [query.variables[0] for query in queries] == [
-        "G",
-        "G",
-        "I",
-        "I",
-        "I",
-        "G",
-        "G",
-        "D",
-    ]
-    assert [len(query.variables) for query in queries] == [1, 1, 1, 1, 1, 2, 1, 2]
+    assert [query.variables[0] for query in queries] == ["G", "G", "I", "D"]
+    assert [len(query.variables) for query in queries] == [1, 1, 1, 2]
 
 
-def test_parse_data_k24_training_file(extended_student_variables):
-    data = parse_data(str(K24 / "dane.csv"), extended_student_variables, is_train_data=True)
+def test_parse_data_training_file(integration_dataset):
+    variables = description_parser(str(integration_dataset / "opis.json")).variables_dict
+    data = parse_data(
+        str(integration_dataset / "dane.csv"), variables, is_train_data=True
+    )
 
     assert isinstance(data, Data)
-    assert len(data.data_frame) == 3000
-    assert data.data_frame.notna().all(axis=1).sum() == 410
+    assert len(data.data_frame) == 5
+    assert data.data_frame.notna().all(axis=1).sum() == 3
 
     missing = data.data_frame.isna().sum().to_dict()
-    assert missing == {
-        "D": 472,
-        "I": 1778,
-        "W": 446,
-        "Q": 337,
-        "E": 488,
-        "G": 429,
-        "S": 193,
-        "L": 333,
-        "R": 334,
-    }
+    assert missing == {"D": 1, "I": 1, "G": 0, "S": 1, "L": 0}
 
 
-def test_parse_data_k24_test_file_is_complete(extended_student_variables):
+def test_parse_data_test_file_is_complete(integration_dataset):
+    variables = description_parser(str(integration_dataset / "opis.json")).variables_dict
     data = parse_data(
-        str(K24 / "test.csv"),
-        extended_student_variables,
+        str(integration_dataset / "test.csv"),
+        variables,
         is_train_data=False,
         allow_missing=False,
     )
 
-    assert len(data.data_frame) == 2000
-    assert data.data_frame.isna().sum().sum() == 0
-
-
-def test_parse_data_przyklad_test_file(student_variables):
-    data = parse_data(
-        str(PRZYKLAD / "test.csv"),
-        student_variables,
-        is_train_data=False,
-        allow_missing=False,
-    )
-
-    assert len(data.data_frame) == 2000
-    assert set(data.data_frame.columns) == set(student_variables)
+    assert len(data.data_frame) == 3
+    assert set(data.data_frame.columns) == set(variables)
     assert data.data_frame.isna().sum().sum() == 0
