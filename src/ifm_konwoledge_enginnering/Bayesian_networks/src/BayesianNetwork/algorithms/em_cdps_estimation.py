@@ -126,7 +126,7 @@ def learn_cpds_em(data: Data, parents: Dict[str, List[str]], max_iter: int=100, 
     - tol: próg zbieżności
     - state_names: opcjonalne jawne stany dla zmiennych, gdy nie wynikają z dtype
 
-    Zwraca listę TabularCPD kompatybilną z pgmpy.
+    Zwraca listę TabularCPD kompatybilną z pgmpy oraz historię (tablicę z logami wiarygodności)
     """
 
     if data.data_purpose == DataPurpose.Test:
@@ -229,9 +229,11 @@ def learn_cpds_em(data: Data, parents: Dict[str, List[str]], max_iter: int=100, 
 
     rng = np.random.default_rng(seed)
     results = []
+    history = []
     for r in range(n_restarts):
         cdps0 = _count_init(scopes, card, codes) if (init == "counts" and r == 0) else None
         cdps, hist = _run_em(scopes, card, patterns, counts, n_rows, max_iter, tol, rng, cdps0)
+        history.append(hist)
 
         results.append((hist[-1], cdps))
 
@@ -259,4 +261,4 @@ def learn_cpds_em(data: Data, parents: Dict[str, List[str]], max_iter: int=100, 
             kwargs["evidence_card"] = [len(domains[parent]) for parent in variable_parents]
         cpds.append(TabularCPD(**kwargs))
 
-    return cpds
+    return cpds, history
