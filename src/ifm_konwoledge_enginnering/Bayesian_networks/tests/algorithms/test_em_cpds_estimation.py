@@ -21,9 +21,8 @@ def test_complete_data_recovers_empirical_cpds_and_state_names():
         ),
     )
 
-    cpds = _cpds_by_variable(
-        learn_cpds_em(data, {"A": [], "B": ["A"]}, max_iter=20)
-    )
+    learned_cpds, _ = learn_cpds_em(data, {"A": [], "B": ["A"]}, max_iter=20)
+    cpds = _cpds_by_variable(learned_cpds)
 
     np.testing.assert_allclose(cpds["A"].get_values()[:, 0], [0.5, 0.5])
     np.testing.assert_allclose(
@@ -46,9 +45,10 @@ def test_missing_values_contribute_expected_counts_and_cpds_are_normalized():
         ),
     )
 
-    cpds = _cpds_by_variable(
-        learn_cpds_em(data, {"A": [], "B": ["A"]}, max_iter=200, tol=1e-10)
+    learned_cpds, _ = learn_cpds_em(
+        data, {"A": [], "B": ["A"]}, max_iter=200, tol=1e-10
     )
+    cpds = _cpds_by_variable(learned_cpds)
 
     b_values = cpds["B"].get_values()
     # pgmpy orders parent configurations according to A's state_names.
@@ -77,7 +77,8 @@ def test_declared_categorical_states_are_preserved():
         ),
     )
 
-    cpd = learn_cpds_em(data, {"A": []})[0]
+    cpds, _ = learn_cpds_em(data, {"A": []})
+    cpd = cpds[0]
 
     assert cpd.state_names["A"] == ["low", "middle", "high"]
     np.testing.assert_allclose(cpd.get_values().sum(axis=0), [1.0])
@@ -96,8 +97,8 @@ def test_fully_missing_row_preserves_cpds_with_reordered_family_axes():
     )
     parents = {"A": ["C", "B"], "B": [], "C": []}
 
-    one_iteration = learn_cpds_em(data, parents, max_iter=1, seed=7)
-    two_iterations = learn_cpds_em(data, parents, max_iter=2, seed=7)
+    one_iteration, _ = learn_cpds_em(data, parents, max_iter=1, seed=7)
+    two_iterations, _ = learn_cpds_em(data, parents, max_iter=2, seed=7)
 
     for first, second in zip(one_iteration, two_iterations):
         np.testing.assert_allclose(first.get_values(), second.get_values())
