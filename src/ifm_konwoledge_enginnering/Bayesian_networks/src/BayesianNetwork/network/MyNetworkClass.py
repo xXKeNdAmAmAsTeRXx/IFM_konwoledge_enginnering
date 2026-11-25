@@ -1,15 +1,19 @@
-from typing import List
+from typing import List, Tuple, Dict
 
 import numpy as np
 import pandas as pd
+from pgmpy.estimators import BIC
 from pgmpy.models import DiscreteBayesianNetwork
 from pgmpy.factors.discrete import TabularCPD
 from pgmpy.parameter_estimator import DiscreteMLE
 from pgmpy.inference import VariableElimination
+from pgmpy.causal_discovery import ExpertKnowledge, HillClimbSearch
+
 
 from BayesianNetwork.models.data import Data, DataPurpose
 from BayesianNetwork.models.graph import GraphData
 from BayesianNetwork.models.queries import Query, QueryType
+from BayesianNetwork.models.variable import Variable
 
 
 class MyNetworkClass:
@@ -34,6 +38,39 @@ class MyNetworkClass:
         mle = DiscreteMLE(state_names = {n : v.states for n, v in graph.variables_dict.items()}).fit(network, training_data.data_frame)
 
         return cls(network, mle.parameters_)
+
+    @staticmethod
+    def learn_structure_HC(training_data: Data, expert: ExpertKnowledge | None = None):
+        """
+        If drop na is false data is estimated by EM algorithm
+        """
+
+        assert training_data.data_purpose == DataPurpose.Train, "Do not train model on test data"
+
+        hc = HillClimbSearch(
+            scoring_method="bic-d",
+            expert_knowledge=expert,
+            return_type="dag",
+            max_indegree=4,
+            show_progress=False,
+        )
+
+        df = training_data.data_frame
+        train_df = df.dropna()
+
+        hc.fit(train_df)
+        g = hc.causal_graph_
+
+        return hc.causal_graph_, BIC(train_df).score(g)
+
+    @classmethod
+    def build_network(cls, training_data: Data, variables_dict: Dict[str, Variable], expert: ExpertKnowledge | None = None):
+        dag, _ = cls.learn_structure_HC(training_data, expert)
+        model = DiscreteBayesianNetwork(list(dag.edges))
+        mle = DiscreteMLE(state_names = {n: v.states for n, v in variables_dict.items()}).fit(model, training_data.data_frame)
+
+        return cls(model, mle.parameters_)
+
 
     def get_biggest_cdp(self):
         # Assume that biggest table is the one with the most values
